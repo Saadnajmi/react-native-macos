@@ -372,6 +372,22 @@ static RCTUIView *RCTUIViewCommonInit(RCTUIView *self)
   return [[self window] makeFirstResponder:self];
 }
 
+- (CGPoint)center
+{
+  NSRect frameRect = [self frame];
+  CGFloat xCenter = NSMidX(frameRect);
+  CGFloat yCenter = NSMidY(frameRect);
+  return CGPointMake(xCenter, yCenter);
+}
+
+- (void)setCenter:(CGPoint)point
+{
+  NSRect frameRect = self.frame;
+  CGFloat xOrigin = point.x - frameRect.size.width / 2;
+  CGFloat yOrigin = point.y - frameRect.size.height / 2;
+  self.frame = CGRectMake(xOrigin, yOrigin, frameRect.size.width, frameRect.size.height);
+}
+
 @synthesize userInteractionEnabled = _userInteractionEnabled;
 
 - (NSView *)hitTest:(CGPoint)point withEvent:(__unused UIEvent *)event

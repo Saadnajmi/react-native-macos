@@ -378,6 +378,8 @@ CGPathRef UIBezierPathCreateCGPathRef(UIBezierPath *path);
 - (BOOL)becomeFirstResponder;
 @property(nonatomic, readonly) BOOL isFirstResponder;
 
+@property(nonatomic) CGPoint center;
+
 @property (nonatomic, getter=isUserInteractionEnabled) BOOL userInteractionEnabled;
 
 - (NSView *)hitTest:(CGPoint)point withEvent:(UIEvent *_Nullable)event;
