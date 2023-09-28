@@ -7,8 +7,6 @@
 
 #import <React/RCTImageViewManager.h>
 
-#import <UIKit/UIKit.h>
-
 #import <React/RCTConvert.h>
 #import <React/RCTImageSource.h>
 

@@ -1,5 +1,5 @@
 #import <RCTAppDelegate.h>
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 @interface AppDelegate : RCTAppDelegate
 

@@ -7,8 +7,6 @@
 
 #import "RCTModalHostView.h"
 
-#import <UIKit/UIKit.h>
-
 #import "RCTAssert.h"
 #import "RCTBridge.h"
 #import "RCTModalHostViewController.h"

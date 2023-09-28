@@ -6,7 +6,7 @@
  */
 
 #import <React/RCTComponent.h>
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 /**
  * Contains any methods related to scrolling. Any `RCTView` that has scrolling

@@ -8,7 +8,7 @@
 #import <React/RCTBridge.h>
 #import <React/RCTSurfacePresenterStub.h>
 #import <React/RCTSurfaceView.h>
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 @interface RCTLogBoxView : UIWindow
 

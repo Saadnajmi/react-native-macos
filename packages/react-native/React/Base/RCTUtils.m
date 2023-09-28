@@ -13,8 +13,6 @@
 #import <objc/runtime.h>
 #import <zlib.h>
 
-#import <UIKit/UIKit.h>
-
 #import <CommonCrypto/CommonCrypto.h>
 
 #import <React/RCTUtilsUIOverride.h>

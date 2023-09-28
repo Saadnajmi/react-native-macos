@@ -9,7 +9,7 @@
 
 #import <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 #import <React/RCTAssert.h>
 #import <React/RCTDefines.h>

@@ -9,7 +9,6 @@
 
 #import <React/RCTAssert.h>
 #import <React/RCTUtils.h>
-#import <UIKit/UIKit.h>
 
 using namespace facebook::react;
 

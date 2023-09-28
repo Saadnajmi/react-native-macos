@@ -7,8 +7,6 @@
 
 #import "RCTScrollView.h"
 
-#import <UIKit/UIKit.h>
-
 #import "RCTConvert.h"
 #import "RCTLog.h"
 #import "RCTRefreshControl.h"

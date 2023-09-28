@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 #import <React/RCTComponent.h>
 // Keeps RCTConvert.h here before yoga for clang module to generate correct header imports.

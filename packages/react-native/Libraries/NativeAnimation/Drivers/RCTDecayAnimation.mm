@@ -8,7 +8,6 @@
 #import <React/RCTDecayAnimation.h>
 
 #import <React/RCTConvert.h>
-#import <UIKit/UIKit.h>
 
 #import <React/RCTAnimationUtils.h>
 #import <React/RCTValueAnimatedNode.h>

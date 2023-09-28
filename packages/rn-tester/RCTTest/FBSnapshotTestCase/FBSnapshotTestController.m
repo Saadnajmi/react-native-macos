@@ -9,8 +9,6 @@
 
 #import <objc/runtime.h>
 
-#import <UIKit/UIKit.h>
-
 #import "UIImage+Compare.h"
 #import "UIImage+Diff.h"
 

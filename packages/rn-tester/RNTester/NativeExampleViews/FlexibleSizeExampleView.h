@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#import <UIKit/UIKit.h>
-
 #import <React/RCTView.h>
 
 @interface FlexibleSizeExampleView : RCTView

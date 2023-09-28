@@ -15,7 +15,6 @@
 #import <React/RCTImageUtils.h>
 #import <React/RCTLog.h>
 #import <React/RCTUtils.h>
-#import <UIKit/UIKit.h>
 
 #import "RCTImagePlugins.h"
 

@@ -6,7 +6,7 @@
  */
 
 #import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 #import <React/RCTDefines.h>
 #import <React/RCTInspectorPackagerConnection.h>

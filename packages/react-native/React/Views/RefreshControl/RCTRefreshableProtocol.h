@@ -6,7 +6,7 @@
  */
 
 #import <React/RCTComponent.h>
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 /**
  * Protocol used to dispatch commands in `RCTRefreshControlManager.h`.

@@ -10,7 +10,6 @@
 #if RCT_DEV || RCT_REMOTE_PROFILE
 
 #import <React/RCTLog.h>
-#import <UIKit/UIKit.h>
 
 #import <React/RCTDefines.h>
 #import <React/RCTInspectorPackagerConnection.h>

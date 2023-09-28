@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 #include <react/renderer/mounting/MountingTransaction.h>
 

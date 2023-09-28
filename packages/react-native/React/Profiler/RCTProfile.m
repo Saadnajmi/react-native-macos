@@ -13,8 +13,6 @@
 #import <objc/runtime.h>
 #import <stdatomic.h>
 
-#import <UIKit/UIKit.h>
-
 #import "RCTAssert.h"
 #import "RCTBridge+Private.h"
 #import "RCTBridge.h"

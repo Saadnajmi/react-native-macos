@@ -7,7 +7,6 @@
 
 #import <Foundation/Foundation.h>
 #import <ReactCommon/RuntimeExecutor.h>
-#import <UIKit/UIKit.h>
 #import <react/utils/ContextContainer.h>
 
 NS_ASSUME_NONNULL_BEGIN

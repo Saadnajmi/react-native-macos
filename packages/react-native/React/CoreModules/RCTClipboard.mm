@@ -8,7 +8,6 @@
 #import "RCTClipboard.h"
 
 #import <FBReactNativeSpec/FBReactNativeSpec.h>
-#import <UIKit/UIKit.h>
 
 #import "CoreModulesPlugins.h"
 

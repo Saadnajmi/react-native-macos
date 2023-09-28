@@ -6,7 +6,7 @@
  */
 
 #import <React/RCTDefines.h>
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 @protocol RCTLocalizationProtocol <NSObject>
 

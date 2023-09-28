@@ -6,7 +6,7 @@
  */
 
 #import <QuartzCore/QuartzCore.h>
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 #import <React/RCTAnimationType.h>
 #import <React/RCTBorderCurve.h>

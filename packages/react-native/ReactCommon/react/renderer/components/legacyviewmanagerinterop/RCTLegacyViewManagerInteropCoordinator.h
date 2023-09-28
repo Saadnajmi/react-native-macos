@@ -7,7 +7,7 @@
 
 #import <Foundation/Foundation.h>
 #import <React/RCTBridgeModuleDecorator.h>
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 #include <folly/dynamic.h>
 
 NS_ASSUME_NONNULL_BEGIN

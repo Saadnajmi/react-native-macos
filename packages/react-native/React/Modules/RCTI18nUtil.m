@@ -7,8 +7,6 @@
 
 #import "RCTI18nUtil.h"
 
-#import <UIKit/UIKit.h>
-
 @implementation RCTI18nUtil
 
 + (instancetype)sharedInstance
