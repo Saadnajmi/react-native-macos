@@ -579,6 +579,16 @@ const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
     needsInvalidateLayer = YES;
   }
 
+#if TARGET_OS_OSX // [macOS
+  if (oldViewProps.focusable != newViewProps.focusable) {
+    self.focusable = (bool)newViewProps.focusable;
+  }
+
+  if (oldViewProps.enableFocusRing != newViewProps.enableFocusRing) {
+    self.enableFocusRing = (bool)newViewProps.enableFocusRing;
+  }
+#endif // macOS]
+
   _needsInvalidateLayer = _needsInvalidateLayer || needsInvalidateLayer;
 
   _props = std::static_pointer_cast<const ViewProps>(props);

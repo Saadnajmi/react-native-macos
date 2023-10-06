@@ -108,6 +108,11 @@ class BaseViewProps : public YogaStylableProps, public AccessibilityProps {
 
   bool removeClippedSubviews{false};
 
+#ifdef TARGET_OS_OSX // [macOS
+  bool focusable{false};
+  bool enableFocusRing{false};
+#endif // macOS]
+
 #pragma mark - Convenience Methods
 
   CascadedBorderWidths getBorderWidths() const;

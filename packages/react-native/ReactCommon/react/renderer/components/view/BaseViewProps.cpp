@@ -345,7 +345,28 @@ BaseViewProps::BaseViewProps(
                     rawProps,
                     "removeClippedSubviews",
                     sourceProps.removeClippedSubviews,
-                    false)) {}
+                    false)),
+#ifdef TARGET_OS_OSX // [macOS
+      focusable(
+          ReactNativeFeatureFlags::enableCppPropsIteratorSetter()
+              ? sourceProps.focusable
+              : convertRawProp(
+                    context,
+                    rawProps,
+                    "focusable",
+                    sourceProps.focusable,
+                    false)),
+      enableFocusRing(
+          ReactNativeFeatureFlags::enableCppPropsIteratorSetter()
+              ? sourceProps.enableFocusRing
+              : convertRawProp(
+                    context,
+                    rawProps,
+                    "enableFocusRing",
+                    sourceProps.enableFocusRing,
+                               false)) {}
+
+#endif // macOS]
 
 #define VIEW_EVENT_CASE(eventType)                      \
   case CONSTEXPR_RAW_PROPS_KEY_HASH("on" #eventType): { \
@@ -399,6 +420,10 @@ void BaseViewProps::setProp(
     RAW_SET_PROP_SWITCH_CASE_BASIC(filter);
     RAW_SET_PROP_SWITCH_CASE_BASIC(boxShadow);
     RAW_SET_PROP_SWITCH_CASE_BASIC(mixBlendMode);
+#ifdef TARGET_OS_OSX // [macOS
+    RAW_SET_PROP_SWITCH_CASE_BASIC(focusable);
+    RAW_SET_PROP_SWITCH_CASE_BASIC(enableFocusRing);
+#endif // macOS]
     // events field
     VIEW_EVENT_CASE(PointerEnter);
     VIEW_EVENT_CASE(PointerEnterCapture);
