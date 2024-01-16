@@ -121,7 +121,7 @@ static NSDictionary *updateInitialProps(NSDictionary *initialProps, BOOL isFabri
     rootView = [self createRootViewWithBridge:self.bridge moduleName:self.moduleName initProps:initProps];
   }
   [self customizeRootView:(RCTRootView *)rootView];
-  self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+  self.window = [[UIWindow alloc] initWithFrame:RCTKeyWindow().bounds];
   UIViewController *rootViewController = [self createRootViewController];
   [self setRootView:rootView toRootViewController:rootViewController];
   self.window.rootViewController = rootViewController;
