@@ -59,6 +59,7 @@ BaseViewProps::BaseViewProps(
     const std::function<bool(const std::string&)>& filterObjectKeys)
     : YogaStylableProps(context, sourceProps, rawProps, filterObjectKeys),
       AccessibilityProps(context, sourceProps, rawProps),
+      HostPlatformViewProps(context, sourceProps, rawProps, shouldSetRawProps),
       opacity(
           ReactNativeFeatureFlags::enableCppPropsIteratorSetter()
               ? sourceProps.opacity
@@ -390,6 +391,7 @@ void BaseViewProps::setProp(
   // reuse the same values.
   YogaStylableProps::setProp(context, hash, propName, value);
   AccessibilityProps::setProp(context, hash, propName, value);
+  HostPlatformViewProps::setProp(context, hash, propName, value);
 
   static auto defaults = BaseViewProps{};
 
