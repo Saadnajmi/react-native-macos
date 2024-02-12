@@ -603,6 +603,27 @@ const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
   if (oldViewProps.enableFocusRing != newViewProps.enableFocusRing) {
     self.enableFocusRing = (bool)newViewProps.enableFocusRing;
   }
+
+  if (oldViewProps.draggedTypes != newViewProps.draggedTypes) {
+    if (oldViewProps.draggedTypes.has_value()) {
+      [self unregisterDraggedTypes];
+    }
+    
+    if (newViewProps.draggedTypes.has_value()) {
+      NSMutableArray<NSPasteboardType> *pasteboardTypes = [NSMutableArray new];
+      for (const auto &draggedType : *newViewProps.draggedTypes) {
+        if (draggedType == "fileUrl") {
+          [pasteboardTypes addObject:NSFilenamesPboardType];
+        } else if (draggedType == "image") {
+          [pasteboardTypes addObject:NSPasteboardTypePNG];
+          [pasteboardTypes addObject:NSPasteboardTypeTIFF];
+        } else if (draggedType == "string") {
+          [pasteboardTypes addObject:NSPasteboardTypeString];
+        }
+      }
+      [self registerForDraggedTypes:pasteboardTypes];
+    }
+  }
 #endif // macOS]
 
   _needsInvalidateLayer = _needsInvalidateLayer || needsInvalidateLayer;
