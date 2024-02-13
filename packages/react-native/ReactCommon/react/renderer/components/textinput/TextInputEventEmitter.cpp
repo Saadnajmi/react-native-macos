@@ -191,6 +191,11 @@ void TextInputEventEmitter::onGrammarCheckChange(
     const Metrics& textInputMetrics) const {
   dispatchTextInputEvent("grammarCheckChange", textInputMetrics);
 }
+
+void TextInputEventEmitter::onPaste(
+    const Metrics& textInputMetrics) const {
+  dispatchTextInputEvent("paste", textInputMetrics);
+}
 #endif // macOS]
 
 void TextInputEventEmitter::dispatchTextInputEvent(

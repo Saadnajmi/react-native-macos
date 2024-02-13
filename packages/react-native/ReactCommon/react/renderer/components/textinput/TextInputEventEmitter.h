@@ -9,6 +9,9 @@
 
 #include <react/renderer/attributedstring/AttributedString.h>
 #include <react/renderer/components/view/ViewEventEmitter.h>
+#if TARGET_OS_OSX // [macOS
+#include <react/renderer/components/view/macOS/MouseEvent.h>
+#endif // macOS]
 
 namespace facebook::react {
 
@@ -53,6 +56,7 @@ class TextInputEventEmitter : public ViewEventEmitter {
   void onAutoCorrectChange(const Metrics& textInputMetrics) const;
   void onSpellCheckChange(const Metrics& textInputMetrics) const;
   void onGrammarCheckChange(const Metrics& textInputMetrics) const;
+  void onPaste(const Metrics& textInputMetrics) const;
  #endif // macOS]
 
  private:
