@@ -612,12 +612,12 @@ const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
     if (newViewProps.draggedTypes.has_value()) {
       NSMutableArray<NSPasteboardType> *pasteboardTypes = [NSMutableArray new];
       for (const auto &draggedType : *newViewProps.draggedTypes) {
-        if (draggedType == "fileUrl") {
+        if (draggedType == DraggedType::FileUrl) {
           [pasteboardTypes addObject:NSFilenamesPboardType];
-        } else if (draggedType == "image") {
+        } else if (draggedType == DraggedType::Image) {
           [pasteboardTypes addObject:NSPasteboardTypePNG];
           [pasteboardTypes addObject:NSPasteboardTypeTIFF];
-        } else if (draggedType == "string") {
+        } else if (draggedType == DraggedType::String) {
           [pasteboardTypes addObject:NSPasteboardTypeString];
         }
       }
