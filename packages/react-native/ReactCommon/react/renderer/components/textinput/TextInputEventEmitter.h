@@ -10,7 +10,7 @@
 #include <react/renderer/attributedstring/AttributedString.h>
 #include <react/renderer/components/view/ViewEventEmitter.h>
 #if TARGET_OS_OSX // [macOS
-#include <react/renderer/components/view/macOS/MouseEvent.h>
+#include <react/renderer/components/view/MouseEvent.h>
 #endif // macOS]
 
 namespace facebook::react {
