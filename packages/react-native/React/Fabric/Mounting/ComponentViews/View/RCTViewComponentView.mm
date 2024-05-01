@@ -37,73 +37,6 @@
 
 using namespace facebook::react;
 
-const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
-
-#if TARGET_OS_OSX // [macOS
-inline NSCursor* RCTNSCursorFromCursor(facebook::react::Cursor cursorValue) {
-  NSCursor *cursor = nil;
-  
-  switch (cursorValue) {
-    case Cursor::Arrow:
-      cursor = [NSCursor arrowCursor];
-      break;
-    case Cursor::ClosedHand:
-      cursor = [NSCursor closedHandCursor];
-      break;
-    case Cursor::ContextualMenu:
-      cursor = [NSCursor contextualMenuCursor];
-      break;
-    case Cursor::Crosshair:
-      cursor = [NSCursor crosshairCursor];
-      break;
-    case Cursor::DisappearingItem:
-      cursor = [NSCursor disappearingItemCursor];
-      break;
-    case Cursor::DragCopy:
-      cursor = [NSCursor dragCopyCursor];
-      break;
-    case Cursor::DragLink:
-      cursor = [NSCursor dragLinkCursor];
-      break;
-    case Cursor::IBeam:
-      cursor = [NSCursor IBeamCursor];
-      break;
-    case Cursor::IBeamCursorForVerticalLayout:
-      cursor = [NSCursor IBeamCursorForVerticalLayout];
-      break;
-    case Cursor::OpenHand:
-      cursor = [NSCursor openHandCursor];
-      break;
-    case Cursor::OperationNotAllowed:
-      cursor = [NSCursor operationNotAllowedCursor];
-      break;
-    case Cursor::PointingHand:
-      cursor = [NSCursor pointingHandCursor];
-      break;
-    case Cursor::ResizeDown:
-      cursor = [NSCursor resizeDownCursor];
-      break;
-    case Cursor::ResizeLeft:
-      cursor = [NSCursor resizeLeftCursor];
-      break;
-    case Cursor::ResizeLeftRight:
-      cursor = [NSCursor resizeLeftRightCursor];
-      break;
-    case Cursor::ResizeRight:
-      cursor = [NSCursor resizeRightCursor];
-      break;
-    case Cursor::ResizeUp:
-      cursor = [NSCursor resizeUpCursor];
-      break;
-    case Cursor::ResizeUpDown:
-      cursor = [NSCursor resizeUpDownCursor];
-      break;
-  }
-  
-  return cursor;
-}
-#endif // macOS]
-
 @implementation RCTViewComponentView {
   RCTUIColor *_backgroundColor; // [macOS]
   CALayer *_backgroundColorLayer;
@@ -392,7 +325,11 @@ inline NSCursor* RCTNSCursorFromCursor(facebook::react::Cursor cursorValue) {
   
   // `cursor`
   if (oldViewProps.cursor != newViewProps.cursor) {
-    needsInvalidateLayer = YES;
+#if !TARGET_OS_OSX // [macOS]
+    needsInvalidateLayer = YES;  // `cursor`
+#else // [macOS
+    _cursor = NSCursorFromCursor(newViewProps.cursor);
+#endif // macOS]
   }
 
   // `cursor`
@@ -700,13 +637,6 @@ inline NSCursor* RCTNSCursorFromCursor(facebook::react::Cursor cursorValue) {
     }
   }
   
-  // `cursor`
-  if (oldViewProps.cursor != newViewProps.cursor) {
-    _cursor = nil;
-    if (newViewProps.cursor.has_value()) {
-      _cursor = RCTNSCursorFromCursor(newViewProps.cursor.value());
-    }
-  }
 #endif // macOS]
 
   _needsInvalidateLayer = _needsInvalidateLayer || needsInvalidateLayer;
@@ -1998,15 +1928,6 @@ enum MouseEventType {
 {
   [self updateClipViewBoundsObserverIfNeeded];
   [super viewDidMoveToWindow];
-}
-
-- (void)resetCursorRects
-{
-  [self discardCursorRects];
-  if (_cursor) {
-    [self addCursorRect:self.bounds cursor:_cursor];
-  }
-  [self updateMouseOverIfNeeded];
 }
 
 - (void)updateTrackingAreas
