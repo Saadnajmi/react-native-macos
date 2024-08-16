@@ -938,10 +938,10 @@ RCT_SCROLL_EVENT_HANDLER(scrollViewDidScrollToTop, onScrollToTop)
                __unused RCTUIManager *uiManager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
     BOOL horz = [self isHorizontal:self->_scrollView];
     NSUInteger minIdx = [self->_maintainVisibleContentPosition[@"minIndexForVisible"] integerValue];
-    for (NSUInteger ii = minIdx; ii < self->_contentView.subviews.count; ++ii) {
+    for (NSUInteger ii = minIdx; ii < self.contentView.subviews.count; ++ii) {
       // Find the first partially or fully visible view. This must be done after we update the content offset
       // or it will tend to grab rows that were made visible by the shift in position
-      UIView *subview = self->_contentView.subviews[ii];
+      UIView *subview = self.contentView.subviews[ii];
       BOOL hasNewView = NO;
       if (horz) {
         CGFloat leftInset = self.inverted ? self->_scrollView.contentInset.right : self->_scrollView.contentInset.left;
@@ -953,7 +953,7 @@ RCT_SCROLL_EVENT_HANDLER(scrollViewDidScrollToTop, onScrollToTop)
         CGFloat y = self->_scrollView.contentOffset.y + bottomInset;
         hasNewView = subview.frame.origin.y + subview.frame.size.height > y;
       }
-      if (hasNewView || ii == self->_contentView.subviews.count - 1) {
+      if (hasNewView || ii == self.contentView.subviews.count - 1) {
         self->_prevFirstVisibleFrame = subview.frame;
         self->_firstVisibleView = subview;
         break;
