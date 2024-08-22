@@ -19,7 +19,6 @@ import type {EdgeInsetsOrSizeProp} from '../../StyleSheet/EdgeInsetsPropType';
 import type {
   BlurEvent,
   FocusEvent,
-  KeyEvent,
   LayoutEvent,
   MouseEvent,
   PressEvent,

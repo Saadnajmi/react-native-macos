@@ -446,7 +446,7 @@ using namespace facebook::react;
 - (void)grammarCheckingDidChange:(BOOL)enabled {}
 
 
-- (BOOL)hasValidKeyDownOrValidKeyUp:(nonnull NSString *)key {
+- (BOOL)hasKeyDownEventOrKeyUpEvent:(nonnull NSString *)key {
   return YES;
 }
 
