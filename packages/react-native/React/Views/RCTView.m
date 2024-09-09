@@ -1064,8 +1064,12 @@ static CGFloat RCTDefaultIfNegativeTo(CGFloat defaultValue, CGFloat x)
   // Return scaled radii
   return (RCTCornerRadii){
       topLeftRadius * MIN(topScaleFactor, leftScaleFactor),
+      topLeftRadius * MIN(topScaleFactor, leftScaleFactor),
+      topRightRadius * MIN(topScaleFactor, rightScaleFactor),
       topRightRadius * MIN(topScaleFactor, rightScaleFactor),
       bottomLeftRadius * MIN(bottomScaleFactor, leftScaleFactor),
+      bottomLeftRadius * MIN(bottomScaleFactor, leftScaleFactor),
+      bottomRightRadius * MIN(bottomScaleFactor, rightScaleFactor),
       bottomRightRadius * MIN(bottomScaleFactor, rightScaleFactor),
   };
 }
@@ -1158,8 +1162,9 @@ static CGFloat RCTDefaultIfNegativeTo(CGFloat defaultValue, CGFloat x)
 #else // [macOS
   const RCTBorderColors borderColors = [self borderColors];
 #endif // macOS]
-  BOOL useIOSBorderRendering = RCTCornerRadiiAreEqual(cornerRadii) && RCTBorderInsetsAreEqual(borderInsets) &&
-      RCTBorderColorsAreEqual(borderColors) && _borderStyle == RCTBorderStyleSolid &&
+
+  BOOL useIOSBorderRendering = RCTCornerRadiiAreEqualAndSymmetrical(cornerRadii) &&
+      RCTBorderInsetsAreEqual(borderInsets) && RCTBorderColorsAreEqual(borderColors) &&
 
       // iOS draws borders in front of the content whereas CSS draws them behind
       // the content. For this reason, only use iOS border drawing when clipping
@@ -1193,7 +1198,7 @@ static CGFloat RCTDefaultIfNegativeTo(CGFloat defaultValue, CGFloat x)
   [layer setTransform:transform];
 #endif // macOS]
   if (useIOSBorderRendering) {
-    layer.cornerRadius = cornerRadii.topLeft;
+    layer.cornerRadius = cornerRadii.topLeftHorizontal;
     layer.borderColor = borderColors.left;
     layer.borderWidth = borderInsets.left;
     layer.backgroundColor = backgroundColor;
@@ -1328,8 +1333,8 @@ static void RCTUpdateHoverStyleForView(RCTView *view)
 
   if (self.clipsToBounds) {
     const RCTCornerRadii cornerRadii = [self cornerRadii];
-    if (RCTCornerRadiiAreEqual(cornerRadii)) {
-      cornerRadius = cornerRadii.topLeft;
+    if (RCTCornerRadiiAreEqualAndSymmetrical(cornerRadii)) {
+      cornerRadius = cornerRadii.topLeftHorizontal;
 
     } else {
       CAShapeLayer *shapeLayer = [CAShapeLayer layer];

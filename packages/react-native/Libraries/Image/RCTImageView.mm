@@ -553,20 +553,8 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithFrame : (CGRect)frame)
   } else if ([self shouldReloadImageSourceAfterResize]) {
     CGSize imageSize = self.image.size;
     CGFloat imageScale = UIImageGetScale(self.image); // [macOS]
-#if !TARGET_OS_OSX // [macOS]
-    CGFloat windowScale = RCTScreenScale();
-    RCTResizeMode resizeMode = (RCTResizeMode)_imageView.contentMode; // [macOS]
-#else // [macOS
-    CGFloat windowScale = self.window != nil ? self.window.backingScaleFactor : [NSScreen mainScreen].backingScaleFactor;
-    RCTResizeMode resizeMode = self.resizeMode;
-
-    // self.contentMode on iOS is translated to RCTResizeModeRepeat in -setResizeMode:
-    if (resizeMode == RCTResizeModeRepeat) {
-      resizeMode = RCTResizeModeStretch;
-    }
-#endif // macOS]
-    CGSize idealSize = RCTTargetSize(imageSize, imageScale, frame.size, windowScale,
-                                       resizeMode, YES); // macOS]
+    CGSize idealSize = RCTTargetSize(
+        imageSize, imageScale, frame.size, RCTScreenScale(), RCTResizeModeFromUIViewContentMode(self.contentMode), YES);
     // Don't reload if the current image or target image size is close enough
     if ((!RCTShouldReloadImageForSizeChange(imageSize, idealSize) ||
          !RCTShouldReloadImageForSizeChange(_targetSize, idealSize)) // [macOS

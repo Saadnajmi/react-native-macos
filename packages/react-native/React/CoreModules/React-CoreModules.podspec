@@ -19,7 +19,9 @@ end
 folly_config = get_folly_config()
 folly_compiler_flags = folly_config[:compiler_flags]
 folly_version = folly_config[:version]
-socket_rocket_version = '0.7.0'
+
+socket_rocket_config = get_socket_rocket_config()
+socket_rocket_version = socket_rocket_config[:version] 
 
 header_search_paths = [
   "\"$(PODS_ROOT)/boost\"",
@@ -48,7 +50,7 @@ Pod::Spec.new do |s|
   s.header_dir             = "CoreModules"
   s.pod_target_xcconfig    = {
                                "USE_HEADERMAP" => "YES",
-                               "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
+                               "CLANG_CXX_LANGUAGE_STANDARD" => rct_cxx_language_standard(),
                                "HEADER_SEARCH_PATHS" => header_search_paths.join(" ")
                              }
   s.ios.framework = "UIKit" # [macOS] Restrict to iOS
