@@ -484,7 +484,7 @@
 				66C3087F2D5BF762FE9E6422 /* Pods-RNTesterIntegrationTests.debug.xcconfig */,
 				7CDA7A212644C6BB8C0D00D8 /* Pods-RNTesterIntegrationTests.release.xcconfig */,
 				8BFB9C61D7BDE894E24BF24F /* Pods-RNTesterUnitTests.release.xcconfig */,
-				EE448B25704B6F47386E69A9 /* Pods-RNTester.release.xcconfig */,
+				9B8542B8C590B51BD0588751 /* Pods-RNTester.release.xcconfig */,
 				E8475AB4E5BB7B7A87C16D41 /* Pods-RNTesterUnitTests.debug.xcconfig */,
 				AB8577B0E8D863BFD8BEB398 /* Pods-RNTester-visionOS.debug.xcconfig */,
 				0553512BB0EDB0E5BC262515 /* Pods-RNTester-visionOS.release.xcconfig */,
@@ -1308,7 +1308,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = EE448B25704B6F47386E69A9 /* Pods-RNTester.release.xcconfig */;
+			baseConfigurationReference = 9B8542B8C590B51BD0588751 /* Pods-RNTester.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
