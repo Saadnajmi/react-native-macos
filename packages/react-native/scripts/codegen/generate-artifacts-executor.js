@@ -60,6 +60,7 @@ const CORE_LIBRARIES_WITH_OUTPUT_FOLDER = {
   },
 };
 const REACT_NATIVE = 'react-native';
+const REACT_NATIVE_MACOS = 'react-native-macos';
 
 const MODULES_PROTOCOLS_H_TEMPLATE_PATH = path.join(
   REACT_NATIVE_PACKAGE_ROOT_FOLDER,
@@ -96,7 +97,7 @@ function readPkgJsonInDirectory(dir) {
 }
 
 function printDeprecationWarningIfNeeded(dependency) {
-  if (dependency === REACT_NATIVE) {
+  if (dependency === REACT_NATIVE || dependency === REACT_NATIVE_MACOS) {
     return;
   }
   console.log(`[Codegen] CodegenConfig Deprecated Setup for ${dependency}.
