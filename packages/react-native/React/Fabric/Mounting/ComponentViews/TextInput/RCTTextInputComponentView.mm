@@ -23,8 +23,10 @@
 
 #import "RCTFabricComponentsPlugins.h"
 
+#if !TARGET_OS_OSX // [macOS]
 /** Native iOS text field bottom keyboard offset amount */
 static const CGFloat kSingleLineKeyboardBottomOffset = 15.0;
+#endif // [macOS]
 
 using namespace facebook::react;
 
@@ -112,6 +114,7 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
 
 - (void)reactUpdateResponderOffsetForScrollView:(RCTScrollViewComponentView *)scrollView
 {
+#if !TARGET_OS_OSX // [macOS]
   if (![self isDescendantOfView:scrollView.scrollView] || !_backedTextInputView.isFirstResponder) {
     // View is outside scroll view or it's not a first responder.
     return;
@@ -132,6 +135,7 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
     }
   }
   scrollView.firstResponderFocus = [self convertRect:focusRect toView:nil];
+#endif // [macOS]
 }
 
 #pragma mark - RCTViewComponentView overrides
@@ -236,11 +240,11 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
     _backedTextInputView.smartInsertDeleteType =
         RCTUITextSmartInsertDeleteTypeFromOptionalBool(newTextInputProps.traits.smartInsertDelete);
   }
-#endif // [macOS]
 
   if (newTextInputProps.traits.showSoftInputOnFocus != oldTextInputProps.traits.showSoftInputOnFocus) {
     [self _setShowSoftInputOnFocus:newTextInputProps.traits.showSoftInputOnFocus];
   }
+#endif // [macOS]
 
   // Traits `blurOnSubmit`, `clearTextOnFocus`, and `selectTextOnFocus` were omitted intentionally here
   // because they are being checked on-demand.
@@ -782,6 +786,7 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
   [self addSubview:_backedTextInputView];
 }
 
+#if !TARGET_OS_OSX // [macOS]
 - (void)_setShowSoftInputOnFocus:(BOOL)showSoftInputOnFocus
 {
   if (showSoftInputOnFocus) {
@@ -798,6 +803,7 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
     _backedTextInputView.inputView = [UIView new];
   }
 }
+#endif // macOS]
 
 - (BOOL)_textOf:(NSAttributedString *)newText equals:(NSAttributedString *)oldText
 {

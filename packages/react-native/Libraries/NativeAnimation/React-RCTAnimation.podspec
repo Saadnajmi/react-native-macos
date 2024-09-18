@@ -43,7 +43,11 @@ Pod::Spec.new do |s|
                                "CLANG_CXX_LANGUAGE_STANDARD" => rct_cxx_language_standard(),
                                "HEADER_SEARCH_PATHS" => header_search_paths.join(" ")
                              }
-  s.framework = ["UIKit", "QuartzCore"]
+  # [macOS Restrict UIKit to iOS and visionOS                          
+  s.ios.framework         = ["UIKit", "QuartzCore"]
+  s.visionos.framework    = ["UIKit", "QuartzCore"]
+  s.osx.framework         = ["Appkit", "QuartzCore"]
+  # macOS]
 
   s.dependency "RCT-Folly", folly_version
   s.dependency "RCTTypeSafety"

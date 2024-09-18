@@ -48,7 +48,10 @@ Pod::Spec.new do |s|
                                "CLANG_CXX_LANGUAGE_STANDARD" => rct_cxx_language_standard(),
                                "HEADER_SEARCH_PATHS" => header_search_paths.join(' ')
                              }
-  s.framework = "UIKit"
+  # [macOS Restrict UIKit to iOS and visionOS
+  s.ios.framework = "UIKit"
+  s.visionos.framework = "UIKit"
+  # macOS]
 
   s.dependency "React-Core/RCTLinkingHeaders", version
   s.dependency "ReactCommon/turbomodule/core", version

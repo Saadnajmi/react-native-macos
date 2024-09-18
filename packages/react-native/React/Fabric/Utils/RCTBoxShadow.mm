@@ -91,7 +91,7 @@ static CGRect insetRect(CGRect rect, CGFloat left, CGFloat top, CGFloat right, C
 static CGColorRef colorRefFromSharedColor(const SharedColor &color)
 {
   CGColorRef colorRef = RCTUIColorFromSharedColor(color).CGColor;
-  return colorRef ? colorRef : [UIColor blackColor].CGColor;
+  return colorRef ? colorRef : [RCTUIColor blackColor].CGColor; // [macOS]
 }
 
 // Core graphics has support for shadows that looks similar to web and are very
@@ -155,7 +155,7 @@ static void renderOutsetShadows(
     // Color here does not matter, we just need something that has 1 for
     // alpha so that the shadow is visible. The rect is purposely rendered
     // outside of the context so it should not be visible.
-    CGContextSetFillColorWithColor(context, [UIColor blackColor].CGColor);
+    CGContextSetFillColorWithColor(context, [RCTUIColor blackColor].CGColor); // [macOS]
     CGContextFillPath(context);
 
     CGPathRelease(shadowRectPath);
@@ -266,7 +266,7 @@ static void renderInsetShadows(
     // intersection between our two rects will be clear. The disjoint parts of
     // the rect will be colored, but because of the clipping area, we only see
     // the shadow projected from the shadow rect, not the clear region rect.
-    CGContextSetFillColorWithColor(context, [UIColor blackColor].CGColor);
+    CGContextSetFillColorWithColor(context, [RCTUIColor blackColor].CGColor); // [macOS]
     CGContextEOFillPath(context);
 
     CGContextRestoreGState(context);
@@ -282,6 +282,7 @@ UIImage *RCTGetBoxShadowImage(
     CALayer *layer)
 {
   CGRect boundingRect = RCTGetBoundingRect(shadows, layer.bounds.size);
+#if !TARGET_OS_OSX // [macOS]
   UIGraphicsImageRendererFormat *const rendererFormat = [UIGraphicsImageRendererFormat defaultFormat];
   UIGraphicsImageRenderer *const renderer = [[UIGraphicsImageRenderer alloc] initWithSize:boundingRect.size
                                                                                    format:rendererFormat];
@@ -296,6 +297,22 @@ UIImage *RCTGetBoxShadowImage(
         renderOutsetShadows(outsetShadows, cornerRadii, layer, boundingRect, context);
         renderInsetShadows(insetShadows, cornerRadii, edgeInsets, layer, boundingRect, context);
       }];
+#else // [macOS
+  UIGraphicsBeginImageContextWithOptions(boundingRect.size, YES, 0.0);
+  CGContextRef context = UIGraphicsGetCurrentContext();
+
+  // Mostly copied from above iOS block
+  auto [outsetShadows, insetShadows] = splitBoxShadowsByInset(shadows);
+  // Outset shadows should be before inset shadows since outset needs to
+  // clear out a region in the view so we do not block its contents.
+  // Inset shadows could draw over those outset shadows but if the shadow
+  // colors have alpha < 1 then we will have inaccurate alpha compositing
+  renderOutsetShadows(outsetShadows, cornerRadii, layer, boundingRect, context);
+  renderInsetShadows(insetShadows, cornerRadii, edgeInsets, layer, boundingRect, context);
+
+  UIImage *boxShadowImage = UIGraphicsGetImageFromCurrentImageContext();
+  UIGraphicsEndImageContext();
+#endif // macOS]
 
   return boxShadowImage;
 }

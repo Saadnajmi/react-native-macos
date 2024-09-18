@@ -53,6 +53,7 @@ using namespace facebook::react;
   RCTParagraphComponentAccessibilityProvider *_accessibilityProvider;
 #if !TARGET_OS_OSX // [macOS]
   UILongPressGestureRecognizer *_longPressGestureRecognizer;
+#endif // [macOS]
   RCTParagraphTextView *_textView;
 }
 

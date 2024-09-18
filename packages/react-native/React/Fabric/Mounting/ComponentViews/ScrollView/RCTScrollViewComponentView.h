@@ -64,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface UIView (RCTScrollViewComponentView)
+@interface RCTPlatformView (RCTScrollViewComponentView)
 
 - (void)reactUpdateResponderOffsetForScrollView:(RCTScrollViewComponentView *)scrollView;
 

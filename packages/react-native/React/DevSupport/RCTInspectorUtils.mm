@@ -9,7 +9,7 @@
 
 #import <React/RCTConstants.h>
 #import <React/RCTVersion.h>
-#import <UIKit/UIKit.h>
+#import <React/RCTUIKit.h>
 
 @implementation CommonHostMetadata
 @end
@@ -25,7 +25,8 @@
   // macOS does not support UIDevice. Use System Configuration. This API
   // returns a nullable value, but is non-blocking (compared with
   // `[NSHost currentHost]`) and is ideal since deviceName is optional.
-  NSString *deviceName = (__bridge NSString *)SCDynamicStoreCopyComputerName(nil, nil);
+//  NSString *deviceName = (__bridge NSString *)SCDynamicStoreCopyComputerName(nil, nil);
+    NSString *deviceName = @"";
 #endif // TARGET_OS_IPHONE
 
   auto version = RCTGetReactNativeVersion();

@@ -53,7 +53,11 @@ Pod::Spec.new do |s|
                                "CLANG_CXX_LANGUAGE_STANDARD" => rct_cxx_language_standard(),
                                "HEADER_SEARCH_PATHS" => header_search_paths.join(" ")
                              }
-  s.ios.framework = "UIKit" # [macOS] Restrict to iOS
+  # [macOS Restrict UIKit to iOS and visionOS
+  s.ios.framework = "UIKit" 
+  s.visionos.framework = "UIKit" 
+  s.osx.framework = "Appkit" 
+  # macOS]
   s.dependency "DoubleConversion"
   s.dependency "fmt", "9.1.0"
   s.dependency "RCT-Folly", folly_version

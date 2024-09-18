@@ -344,8 +344,13 @@ static void *TextFieldSelectionObservingContext = &TextFieldSelectionObservingCo
     return NO;
   }
 
+#if !TARGET_OS_OSX // [macOS]
   if (range.location + range.length > _backedTextInputView.text.length) {
     range = NSMakeRange(range.location, _backedTextInputView.text.length - range.location);
+#else // [macOS
+  if (range.location + range.length > _backedTextInputView.string.length) {
+    range = NSMakeRange(range.location, _backedTextInputView.string.length - range.location);
+#endif // macOS]
   } else if ([newText isEqualToString:text]) {
     _textDidChangeIsComing = YES;
     return YES;

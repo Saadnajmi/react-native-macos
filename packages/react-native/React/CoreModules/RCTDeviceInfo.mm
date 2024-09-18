@@ -128,7 +128,6 @@ RCT_EXPORT_MODULE()
 static BOOL RCTIsIPhoneNotched()
 {
   static BOOL isIPhoneNotched = NO;
-#if TARGET_OS_IOS // [macOS] [visionOS]
   static dispatch_once_t onceToken;
 
 #if TARGET_OS_IOS

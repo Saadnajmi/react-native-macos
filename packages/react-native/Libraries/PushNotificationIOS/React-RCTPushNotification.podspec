@@ -44,7 +44,11 @@ Pod::Spec.new do |s|
                                "CLANG_CXX_LANGUAGE_STANDARD" => rct_cxx_language_standard(),
                                "HEADER_SEARCH_PATHS" => header_search_paths.join(' ')
                              }
-  s.framework              = ["UIKit", "UserNotifications"]
+  # [macOS Restrict UIKit to iOS and visionOS
+  s.ios.framework           = ["UIKit", "UserNotifications"]
+  s.visionos.framework      = ["UIKit", "UserNotifications"]
+  s.osx.framework           = ["Appkit", "UserNotifications"]
+  # macOS]
 
   s.dependency "RCTTypeSafety"
   s.dependency "React-Core/RCTPushNotificationHeaders"

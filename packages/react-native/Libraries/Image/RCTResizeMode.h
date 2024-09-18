@@ -37,6 +37,7 @@ static inline RCTResizeMode RCTResizeModeFromUIViewContentMode(UIViewContentMode
     case UIViewContentModeCenter:
       return RCTResizeModeCenter;
       break;
+#if !TARGET_OS_OSX // [macOS]
     case UIViewContentModeRedraw:
     case UIViewContentModeTop:
     case UIViewContentModeBottom:
@@ -47,6 +48,7 @@ static inline RCTResizeMode RCTResizeModeFromUIViewContentMode(UIViewContentMode
     case UIViewContentModeBottomLeft:
     case UIViewContentModeBottomRight:
       return RCTResizeModeRepeat;
+#endif // [macOS]
   }
 };
 

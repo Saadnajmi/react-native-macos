@@ -169,7 +169,7 @@ int32_t Color::getColor() const
 float Color::getChannel(int channelId) const
 {
   CGFloat rgba[4];
-  UIColor *color = (__bridge UIColor *)getUIColor().get();
+  RCTUIColor *color = (__bridge RCTUIColor *)getUIColor().get(); // [macOS]
   [color getRed:&rgba[0] green:&rgba[1] blue:&rgba[2] alpha:&rgba[3]];
   return static_cast<float>(rgba[channelId]);
 }

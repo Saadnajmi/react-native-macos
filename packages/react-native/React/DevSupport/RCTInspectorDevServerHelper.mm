@@ -82,7 +82,6 @@ static NSString *getInspectorDeviceId()
 
 #if TARGET_OS_IPHONE
   // An alphanumeric string that uniquely identifies a device to the app's vendor. [Source: Apple docs]
-#if !TARGET_OS_OSX // [macOS]
   NSString *identifierForVendor = [[UIDevice currentDevice] identifierForVendor].UUIDString;
 #else
   // macOS does not support UIDevice. Use an empty string, with the assumption

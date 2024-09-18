@@ -9,7 +9,7 @@
 
 #import <React/RCTBorderDrawing.h>
 #import <React/RCTDefines.h>
-#import <UIKit/UIKit.h>
+#import <React/RCTUIKit.h>
 #import <react/renderer/graphics/BoxShadow.h>
 
 RCT_EXTERN UIImage *RCTGetBoxShadowImage(

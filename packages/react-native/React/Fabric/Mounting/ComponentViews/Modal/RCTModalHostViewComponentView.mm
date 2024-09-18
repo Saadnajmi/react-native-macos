@@ -278,7 +278,6 @@ static ModalHostViewEventEmitter::OnOrientationChange onOrientationChangeStruct(
 {
   [childComponentView removeFromSuperview];
 }
-#endif // [macOS]
 
 #pragma mark - Private
 
@@ -300,6 +299,7 @@ static ModalHostViewEventEmitter::OnOrientationChange onOrientationChangeStruct(
   return topController;
 }
 
+#endif // [macOS]
 @end
 
 #ifdef __cplusplus

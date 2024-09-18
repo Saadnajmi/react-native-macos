@@ -44,7 +44,7 @@ const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
   BOOL _removeClippedSubviews;
   NSMutableArray<RCTUIView *> *_reactSubviews; // [macOS]
   NSSet<NSString *> *_Nullable _propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN;
-  UIView *_containerView;
+  RCTPlatformView *_containerView; // [macOS]
   BOOL _useCustomContainerView;
 }
 
@@ -464,7 +464,7 @@ const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
     SEL setAccessibilityIdentifierSelector = @selector(setAccessibilityIdentifier:);
     NSString *identifier = RCTNSStringFromString(newViewProps.testId);
     if ([self.accessibilityElement respondsToSelector:setAccessibilityIdentifierSelector]) {
-      UIView *accessibilityView = (UIView *)self.accessibilityElement;
+      RCTPlatformView *accessibilityView = (RCTPlatformView *)self.accessibilityElement; // [macOS]
       accessibilityView.accessibilityIdentifier = identifier;
     } else {
       self.accessibilityIdentifier = identifier;
@@ -652,7 +652,7 @@ const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
 
   BOOL isPointInside = [self pointInside:point withEvent:event];
 
-  BOOL clipsToBounds = self.currentContainerView.clipsToBounds;
+  BOOL clipsToBounds = false;
 
   clipsToBounds = clipsToBounds || _layoutMetrics.overflowInset == EdgeInsets{};
 
@@ -832,7 +832,7 @@ static RCTCursor RCTCursorFromCursor(Cursor cursor)
 // This UIView is the UIView that holds all subviews. It is sometimes not self
 // because we want to render "overflow ink" that extends beyond the bounds of
 // the view and is not affected by clipping.
-- (RCTPlatformView *)currentContainerView // [macOS]
+- (RCTUIView *)currentContainerView // [macOS]
 {
   if (_useCustomContainerView) {
     if (!_containerView) {
@@ -1036,7 +1036,7 @@ static RCTCursor RCTCursorFromCursor(Cursor cursor)
         RCTCornerRadiiFromBorderRadii(borderMetrics.borderRadii),
         RCTUIEdgeInsetsFromEdgeInsets(borderMetrics.borderWidths),
         borderColors,
-        [UIColor clearColor].CGColor,
+        [RCTUIColor clearColor].CGColor, // [macOS]
         NO,
         scaleFactor); // [macOS]
 
@@ -1119,7 +1119,7 @@ static RCTCursor RCTCursorFromCursor(Cursor cursor)
       for (const auto &colorStop : gradient.colorStops) {
         if (colorStop.position.has_value()) {
           auto location = @(colorStop.position.value());
-          UIColor *color = RCTUIColorFromSharedColor(colorStop.color);
+          RCTUIColor *color = RCTUIColorFromSharedColor(colorStop.color); // [macOS]
           [colors addObject:(id)color.CGColor];
           [locations addObject:location];
         }
@@ -1172,12 +1172,16 @@ static RCTCursor RCTCursorFromCursor(Cursor cursor)
         RCTUIEdgeInsetsFromEdgeInsets(borderMetrics.borderWidths),
         layer);
 
+#if !TARGET_OS_OSX // [macOS]
     _boxShadowLayer.contents = (id)boxShadowImage.CGImage;
+#else // [macOS
+    _boxShadowLayer.contents = (__bridge id)UIImageGetCGImageRef(boxShadowImage);
+#endif // macOS]
   }
 
   // clipping
-  if (self.currentContainerView.clipsToBounds) {
-    BOOL clipToPaddingBox = ReactNativeFeatureFlags::enableIOSViewClipToPaddingBox();
+  if (false) {
+    BOOL clipToPaddingBox = false;
     if (clipToPaddingBox) {
       CALayer *maskLayer = [self createMaskLayer:RCTCGRectFromRect(_layoutMetrics.getPaddingFrame())
                                     cornerInsets:RCTGetCornerInsets(
@@ -1195,8 +1199,8 @@ static RCTCursor RCTCursorFromCursor(Cursor cursor)
         self.currentContainerView.layer.mask = maskLayer;
       }
 
-      for (UIView *subview in self.currentContainerView.subviews) {
-        if ([subview isKindOfClass:[UIImageView class]]) {
+      for (RCTPlatformView *subview in self.currentContainerView.subviews) { // [macOS]
+        if ([subview isKindOfClass:[RCTUIImageView class]]) { // [macOS]
           RCTCornerInsets cornerInsets = RCTGetCornerInsets(
               RCTCornerRadiiFromBorderRadii(borderMetrics.borderRadii),
               RCTUIEdgeInsetsFromEdgeInsets(borderMetrics.borderWidths));

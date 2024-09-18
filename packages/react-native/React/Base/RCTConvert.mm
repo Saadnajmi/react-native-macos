@@ -490,7 +490,6 @@ RCT_ENUM_CONVERTER(
     UIReturnKeyDefault,
     integerValue)
 
-#if !TARGET_OS_OSX // [macOS]
 RCT_ENUM_CONVERTER(
     UIUserInterfaceStyle,
     (@{
@@ -500,7 +499,6 @@ RCT_ENUM_CONVERTER(
     }),
     UIUserInterfaceStyleUnspecified,
     integerValue)
-#endif // [macOS]
 
 RCT_ENUM_CONVERTER(
     UIInterfaceOrientationMask,
@@ -548,6 +546,7 @@ RCT_ENUM_CONVERTER(
     }),
     UIViewContentModeScaleAspectFill,
     integerValue)
+#endif // [macOS]
 
 RCT_ENUM_CONVERTER(
     RCTCursor,

@@ -90,6 +90,7 @@ typedef NSURL RCTFileURL;
 #endif
 
 + (UIViewContentMode)UIViewContentMode:(id)json;
+#endif // [macOS]
 
 #if TARGET_OS_OSX // [macOS
 + (NSTextCheckingTypes)NSTextCheckingTypes:(id)json;
