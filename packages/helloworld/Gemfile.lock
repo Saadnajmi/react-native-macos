@@ -75,7 +75,7 @@ GEM
     netrc (0.11.0)
     nkf (0.2.0)
     public_suffix (4.0.7)
-    rexml (3.3.5)
+    rexml (3.3.6)
       strscan
     ruby-macho (2.5.1)
     strscan (3.1.0)
@@ -90,6 +90,7 @@ GEM
       colored2 (~> 3.1)
       nanaimo (~> 0.3.0)
       rexml (>= 3.3.2, < 4.0)
+    zeitwerk (2.6.13)
 
 PLATFORMS
   ruby
