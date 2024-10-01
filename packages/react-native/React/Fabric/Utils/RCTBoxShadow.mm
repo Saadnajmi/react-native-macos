@@ -149,6 +149,12 @@ static void renderOutsetShadows(
         blurRadius,
         color);
 
+    #if TARGET_OS_OSX // [macOS
+    // Flip our context to account for macOS's flipped coordinate system
+    CGAffineTransform transform = CGAffineTransformMake(1, 0, 0, -1, 0, boundingRect.size.height);
+    CGContextConcatCTM(context, transform);
+    #endif // macOS]
+
     // Third, the Core Graphics functions to actually draw the shadow rect
     // and thus the shadow itself.
     CGContextAddPath(context, shadowRectPath);
@@ -215,6 +221,12 @@ static void renderInsetShadows(
   CGContextAddPath(context, layerPath);
   CGContextEOClip(context);
   CGPathRelease(layerPath);
+
+  #if TARGET_OS_OSX // [macOS
+  // Flip our context to account for macOS's flipped coordinate system
+  CGAffineTransform transform = CGAffineTransformMake(1, 0, 0, -1, 0, boundingRect.size.height);
+  CGContextConcatCTM(context, transform);
+  #endif // macOS]
 
   // Reverse iterator as shadows are stacked back to front
   for (auto it = insetShadows.rbegin(); it != insetShadows.rend(); ++it) {
