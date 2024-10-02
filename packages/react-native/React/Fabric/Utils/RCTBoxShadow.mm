@@ -123,6 +123,12 @@ static void renderOutsetShadows(
     CGFloat blurRadius = it->blurRadius;
     CGFloat spreadDistance = it->spreadDistance;
     CGColorRef color = colorRefFromSharedColor(it->color);
+      
+    #if TARGET_OS_OSX // [macOS
+      // unflip the context
+      CGContextTranslateCTM(context, 0.0, boundingRect.size.height);
+      CGContextScaleCTM(context, 1, -1);
+    #endif // macOS]
 
     // First, define the shadow rect. This is the rect that will be filled
     // and _cast_ the shadow. As a result, the size does not incorporate
@@ -148,12 +154,6 @@ static void renderOutsetShadows(
             offsetY - boundingRect.origin.y - spreadDistance),
         blurRadius,
         color);
-
-    #if TARGET_OS_OSX // [macOS
-    // Flip our context to account for macOS's flipped coordinate system
-    CGAffineTransform transform = CGAffineTransformMake(1, 0, 0, -1, 0, boundingRect.size.height);
-    CGContextConcatCTM(context, transform);
-    #endif // macOS]
 
     // Third, the Core Graphics functions to actually draw the shadow rect
     // and thus the shadow itself.
@@ -221,12 +221,6 @@ static void renderInsetShadows(
   CGContextAddPath(context, layerPath);
   CGContextEOClip(context);
   CGPathRelease(layerPath);
-
-  #if TARGET_OS_OSX // [macOS
-  // Flip our context to account for macOS's flipped coordinate system
-  CGAffineTransform transform = CGAffineTransformMake(1, 0, 0, -1, 0, boundingRect.size.height);
-  CGContextConcatCTM(context, transform);
-  #endif // macOS]
 
   // Reverse iterator as shadows are stacked back to front
   for (auto it = insetShadows.rbegin(); it != insetShadows.rend(); ++it) {
