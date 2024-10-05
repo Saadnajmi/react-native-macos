@@ -125,9 +125,9 @@ static void renderOutsetShadows(
     CGColorRef color = colorRefFromSharedColor(it->color);
       
     #if TARGET_OS_OSX // [macOS
-      // unflip the context
-      CGContextTranslateCTM(context, 0.0, boundingRect.size.height);
-      CGContextScaleCTM(context, 1, -1);
+      // For some reason, unflipping the context gets outset shadows to (mostly) appear correctly on macOS
+      CGAffineTransform flippedTransform = CGAffineTransformMake(1, 0, 0, -1, 0, boundingRect.size.height);
+      CGContextConcatCTM(context, flippedTransform);
     #endif // macOS]
 
     // First, define the shadow rect. This is the rect that will be filled
