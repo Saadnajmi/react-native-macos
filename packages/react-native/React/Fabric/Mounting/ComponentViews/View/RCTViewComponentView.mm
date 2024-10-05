@@ -273,9 +273,8 @@ const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
 
   // `shadowColor`
   if (oldViewProps.shadowColor != newViewProps.shadowColor) {
-    CGColorRef shadowColor = RCTCreateCGColorRefFromSharedColor(newViewProps.shadowColor);
-    self.layer.shadowColor = shadowColor;
-    CGColorRelease(shadowColor);
+    RCTUIColor *shadowColor = RCTUIColorFromSharedColor(newViewProps.shadowColor);
+    self.layer.shadowColor = shadowColor.CGColor;
     needsInvalidateLayer = YES;
   }
 
@@ -701,18 +700,10 @@ static RCTCornerRadii RCTCornerRadiiFromBorderRadii(BorderRadii borderRadii)
 static RCTBorderColors RCTCreateRCTBorderColorsFromBorderColors(BorderColors borderColors)
 {
   return RCTBorderColors{
-      .top = RCTCreateCGColorRefFromSharedColor(borderColors.top),
-      .left = RCTCreateCGColorRefFromSharedColor(borderColors.left),
-      .bottom = RCTCreateCGColorRefFromSharedColor(borderColors.bottom),
-      .right = RCTCreateCGColorRefFromSharedColor(borderColors.right)};
-}
-
-static void RCTReleaseRCTBorderColors(RCTBorderColors borderColors)
-{
-  CGColorRelease(borderColors.top);
-  CGColorRelease(borderColors.left);
-  CGColorRelease(borderColors.bottom);
-  CGColorRelease(borderColors.right);
+      .top = RCTUIColorFromSharedColor(borderColors.top),
+      .left = RCTUIColorFromSharedColor(borderColors.left),
+      .bottom = RCTUIColorFromSharedColor(borderColors.bottom),
+      .right = RCTUIColorFromSharedColor(borderColors.right)};
 }
 
 static CALayerCornerCurve CornerCurveFromBorderCurve(BorderCurve borderCurve)
@@ -956,11 +947,9 @@ static RCTCursor RCTCursorFromCursor(Cursor cursor)
            (*borderMetrics.borderColors.left).getUIColor() != nullptr));
 
 #if !TARGET_OS_OSX // [macOS]
-  // background color
-  CGColorRef backgroundColor = [_backgroundColor resolvedColorWithTraitCollection:self.traitCollection].CGColor;
+  RCTUIColor *backgroundColor = [_backgroundColor resolvedColorWithTraitCollection:self.traitCollection];
 #else // [macOS
-  // background color
-  CGColorRef backgroundColor = _backgroundColor.CGColor;
+  RCTUIColor *backgroundColor = _backgroundColor;
 #endif // macOS]
   // The reason we sometimes do not set self.layer's backgroundColor is because
   // we want to support non-uniform border radii, which apple does not natively
@@ -971,7 +960,7 @@ static RCTCursor RCTCursorFromCursor(Cursor cursor)
   if (useCoreAnimationBorderRendering) {
     [_backgroundColorLayer removeFromSuperlayer];
     _backgroundColorLayer = nil;
-    layer.backgroundColor = backgroundColor;
+    layer.backgroundColor = backgroundColor.CGColor;
   } else {
     layer.backgroundColor = nil;
     if (!_backgroundColorLayer) {
@@ -981,7 +970,7 @@ static RCTCursor RCTCursorFromCursor(Cursor cursor)
       [self.layer addSublayer:_backgroundColorLayer];
     }
 
-    _backgroundColorLayer.backgroundColor = backgroundColor;
+    _backgroundColorLayer.backgroundColor = backgroundColor.CGColor;
     if (borderMetrics.borderRadii.isUniform()) {
       _backgroundColorLayer.mask = nil;
       _backgroundColorLayer.cornerRadius = borderMetrics.borderRadii.topLeft.horizontal;
@@ -1002,11 +991,13 @@ static RCTCursor RCTCursorFromCursor(Cursor cursor)
     _borderLayer = nil;
 
     layer.borderWidth = (CGFloat)borderMetrics.borderWidths.left;
-    CGColorRef borderColor = RCTCreateCGColorRefFromSharedColor(borderMetrics.borderColors.left);
-    layer.borderColor = borderColor;
-    CGColorRelease(borderColor);
+    RCTUIColor *borderColor = RCTUIColorFromSharedColor(borderMetrics.borderColors.left);
+    layer.borderColor = borderColor.CGColor;
     layer.cornerRadius = (CGFloat)borderMetrics.borderRadii.topLeft.horizontal;
+
     layer.cornerCurve = CornerCurveFromBorderCurve(borderMetrics.borderCurves.topLeft);
+
+    layer.backgroundColor = backgroundColor.CGColor;
   } else {
     if (!_borderLayer) {
       CALayer *borderLayer = [CALayer new];
@@ -1036,11 +1027,9 @@ static RCTCursor RCTCursorFromCursor(Cursor cursor)
         RCTCornerRadiiFromBorderRadii(borderMetrics.borderRadii),
         RCTUIEdgeInsetsFromEdgeInsets(borderMetrics.borderWidths),
         borderColors,
-        [RCTUIColor clearColor].CGColor, // [macOS]
+        [RCTUIColor clearColor], // [macOS]
         NO,
         scaleFactor); // [macOS]
-
-    RCTReleaseRCTBorderColors(borderColors);
 
     if (image == nil) {
       _borderLayer.contents = nil;
