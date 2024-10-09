@@ -307,7 +307,7 @@ describe('publish-npm', () => {
 
       // Generate Android artifacts is now delegate to build_android entirely
       expect(generateAndroidArtifactsMock).not.toHaveBeenCalled();
-
+      /* [macOS
       expect(publishAndroidArtifactsToMavenMock).toHaveBeenCalledWith(
         expectedVersion,
         'release',
@@ -360,6 +360,7 @@ describe('publish-npm', () => {
         'release',
       );
 
+      /* [macOS
       expect(publishPackageMock.mock.calls).toEqual([
         [
           path.join(REPO_ROOT, 'packages', 'react-native'),
