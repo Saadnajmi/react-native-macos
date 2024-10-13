@@ -196,10 +196,9 @@ static UIImage *RCTGetSolidBorderImage(
     CGSize viewSize,
     UIEdgeInsets borderInsets,
     RCTBorderColors borderColors,
-    RCTUIColor *backgroundColor,
-    BOOL drawToEdge,
-    CGFloat scaleFactor // [macOS]
-) {
+    RCTUIColor *backgroundColor, // [macOS]
+    BOOL drawToEdge)
+{
   const BOOL hasCornerRadii = RCTCornerRadiiAreAboveThreshold(cornerRadii);
   const RCTCornerInsets cornerInsets = RCTGetCornerInsets(cornerRadii, borderInsets);
 
@@ -236,7 +235,7 @@ static UIImage *RCTGetSolidBorderImage(
   } // macOS]
 
   RCTUIGraphicsImageRenderer *const imageRenderer =
-      RCTMakeUIGraphicsImageRenderer(size, backgroundColor, hasCornerRadii, drawToEdge); // [macOS]
+      RCTMakeUIGraphicsImageRenderer(size, backgroundColor, hasCornerRadii, drawToEdge);
   UIImage *image = [imageRenderer imageWithActions:^(RCTUIGraphicsImageRendererContext *_Nonnull rendererContext) { // [macOS]
     const CGContextRef context = rendererContext.CGContext;
     const CGRect rect = {.size = size};
@@ -323,7 +322,7 @@ static UIImage *RCTGetSolidBorderImage(
         }
       }
 
-      RCTUIColor *currentColor = NULL;
+      RCTUIColor *currentColor = nil;
 
       // RIGHT
       if (borderInsets.right > 0) {
@@ -473,10 +472,9 @@ static UIImage *RCTGetDashedOrDottedBorderImage(
     CGSize viewSize,
     UIEdgeInsets borderInsets,
     RCTBorderColors borderColors,
-    RCTUIColor *backgroundColor,
-    BOOL drawToEdge,
-    CGFloat scaleFactor // [macOS]
-) {
+    RCTUIColor *backgroundColor, // [macOS]
+    BOOL drawToEdge)
+{
   NSCParameterAssert(borderStyle == RCTBorderStyleDashed || borderStyle == RCTBorderStyleDotted);
 
   if (!RCTBorderColorsAreEqual(borderColors) || !RCTBorderInsetsAreEqual(borderInsets)) {
@@ -496,7 +494,7 @@ static UIImage *RCTGetDashedOrDottedBorderImage(
 
   const BOOL hasCornerRadii = RCTCornerRadiiAreAboveThreshold(cornerRadii);
   RCTUIGraphicsImageRenderer *const imageRenderer = // [macOS]
-      RCTMakeUIGraphicsImageRenderer(viewSize, backgroundColor, hasCornerRadii, drawToEdge); // [macOS]
+      RCTMakeUIGraphicsImageRenderer(viewSize, backgroundColor, hasCornerRadii, drawToEdge);
   return [imageRenderer imageWithActions:^(RCTUIGraphicsImageRendererContext *_Nonnull rendererContext) { // [macOS]
     const CGContextRef context = rendererContext.CGContext;
     const CGRect rect = {.size = viewSize};
@@ -538,17 +536,16 @@ UIImage *RCTGetBorderImage(
     RCTCornerRadii cornerRadii,
     UIEdgeInsets borderInsets,
     RCTBorderColors borderColors,
-    RCTUIColor *backgroundColor,
-    BOOL drawToEdge,
-    CGFloat scaleFactor // [macOS]
-) {
+    RCTUIColor *backgroundColor, // [macOS]
+    BOOL drawToEdge)
+{
   switch (borderStyle) {
     case RCTBorderStyleSolid:
-      return RCTGetSolidBorderImage(cornerRadii, viewSize, borderInsets, borderColors, backgroundColor, drawToEdge, scaleFactor); // [macOS]
+      return RCTGetSolidBorderImage(cornerRadii, viewSize, borderInsets, borderColors, backgroundColor, drawToEdge);
     case RCTBorderStyleDashed:
     case RCTBorderStyleDotted:
       return RCTGetDashedOrDottedBorderImage(
-          borderStyle, cornerRadii, viewSize, borderInsets, borderColors, backgroundColor, drawToEdge, scaleFactor); // [macOS]
+          borderStyle, cornerRadii, viewSize, borderInsets, borderColors, backgroundColor, drawToEdge);
     case RCTBorderStyleUnset:
       break;
   }

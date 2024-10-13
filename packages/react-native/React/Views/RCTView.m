@@ -1121,10 +1121,10 @@ static CGFloat RCTDefaultIfNegativeTo(CGFloat defaultValue, CGFloat x)
 #endif // [macOS]
 
   return (RCTBorderColors){
-      (borderTopColor ?: borderColor).CGColor,
-      (directionAwareBorderLeftColor ?: borderColor).CGColor,
-      (borderBottomColor ?: borderColor).CGColor,
-      (directionAwareBorderRightColor ?: borderColor).CGColor,
+      (borderTopColor ?: borderColor),
+      (directionAwareBorderLeftColor ?: borderColor),
+      (borderBottomColor ?: borderColor),
+      (directionAwareBorderRightColor ?: borderColor),
   };
 }
 
@@ -1181,9 +1181,9 @@ static CGFloat RCTDefaultIfNegativeTo(CGFloat defaultValue, CGFloat x)
   // correctly clip the subviews.
 
 #if !TARGET_OS_OSX // [macOS]
-    RCTUIColor *backgroundColor = [_backgroundColor resolvedColorWithTraitCollection:self.traitCollection];
+  RCTUIColor *backgroundColor = [_backgroundColor resolvedColorWithTraitCollection:self.traitCollection];
 #else // [macOS
-    RCTUIColor *backgroundColor = _backgroundColor;
+  RCTUIColor *backgroundColor = _backgroundColor;
 #endif // macOS]
 
 #if TARGET_OS_OSX // [macOS
@@ -1210,21 +1210,8 @@ static CGFloat RCTDefaultIfNegativeTo(CGFloat defaultValue, CGFloat x)
     return;
   }
 
-#if TARGET_OS_OSX // [macOS
-  CGFloat scaleFactor = self.window.backingScaleFactor;
-  if (scaleFactor == 0.0 && RCTRunningInTestEnvironment()) {
-    // When running in the test environment the view is not on screen.
-    // Use a scaleFactor of 1 so that the test results are machine independent.
-    scaleFactor = 1;
-  }
-  RCTAssert(scaleFactor != 0.0, @"displayLayer occurs before the view is in a window?");
-#else
-  // On iOS setting the scaleFactor to 0.0 will default to the device's native scale factor.
-  CGFloat scaleFactor = 0.0;
-#endif // macOS]
-
   UIImage *image = RCTGetBorderImage(
-      _borderStyle, layer.bounds.size, cornerRadii, borderInsets, borderColors, backgroundColor, self.clipsToBounds, scaleFactor); // [macOS]
+      _borderStyle, layer.bounds.size, cornerRadii, borderInsets, borderColors, backgroundColor, self.clipsToBounds);
 
   layer.backgroundColor = NULL;
 
@@ -1245,6 +1232,7 @@ static CGFloat RCTDefaultIfNegativeTo(CGFloat defaultValue, CGFloat x)
   layer.contents = (id)image.CGImage;
   layer.contentsScale = image.scale;
 #else // [macOS
+  CGFloat scaleFactor = self.window.backingScaleFactor;
   layer.contents = [image layerContentsForContentsScale:scaleFactor];
   layer.contentsScale = scaleFactor;
 #endif // macOS]

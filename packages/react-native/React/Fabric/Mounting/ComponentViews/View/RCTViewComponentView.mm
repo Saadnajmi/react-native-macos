@@ -1014,22 +1014,15 @@ static RCTCursor RCTCursorFromCursor(Cursor cursor)
 
     RCTBorderColors borderColors = RCTCreateRCTBorderColorsFromBorderColors(borderMetrics.borderColors);
 
-#if TARGET_OS_OSX // [macOS
-    CGFloat scaleFactor = _layoutMetrics.pointScaleFactor;
-#else
-    // On iOS setting the scaleFactor to 0.0 will default to the device's native scale factor.
-    CGFloat scaleFactor = 0.0;
-#endif // macOS]
-
     UIImage *image = RCTGetBorderImage(
         RCTBorderStyleFromBorderStyle(borderMetrics.borderStyles.left),
         layer.bounds.size,
         RCTCornerRadiiFromBorderRadii(borderMetrics.borderRadii),
         RCTUIEdgeInsetsFromEdgeInsets(borderMetrics.borderWidths),
         borderColors,
-        [RCTUIColor clearColor], // [macOS]
-        NO,
-        scaleFactor); // [macOS]
+        backgroundColor,
+        self.clipsToBounds);
+
 
     if (image == nil) {
       _borderLayer.contents = nil;
@@ -1044,6 +1037,7 @@ static RCTCursor RCTCursorFromCursor(Cursor cursor)
         _borderLayer.contents = (id)image.CGImage;
         _borderLayer.contentsScale = image.scale;
 #else // [macOS
+        CGFloat scaleFactor = _layoutMetrics.pointScaleFactor;
         _borderLayer.contents = [image layerContentsForContentsScale:scaleFactor];
         _borderLayer.contentsScale = scaleFactor;
 #endif // macOS]
