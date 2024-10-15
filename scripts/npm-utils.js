@@ -169,7 +169,10 @@ function publishPackage(
     : {cwd: packagePath};
 
   // [macOS] Skip NPM Publish by running as a dry run as we do that in our Azure Pipeline
-  return exec(`npm publish${tagsFlag}${otpFlag}${accessFlag} --dry-run`, options);
+  return exec(
+    `npm publish${tagsFlag}${otpFlag}${accessFlag} --dry-run`,
+    options,
+  );
 }
 
 /**
