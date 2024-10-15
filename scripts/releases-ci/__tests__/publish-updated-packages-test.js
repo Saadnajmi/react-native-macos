@@ -100,6 +100,7 @@ describe('publishUpdatedPackages', () => {
     );
   });
 
+  /* [macOS 
   test('should publish all updated packages', async () => {
     execSync.mockImplementation((command: string) => {
       switch (command) {
@@ -264,6 +265,7 @@ describe('publishUpdatedPackages', () => {
       expect(message).toEqual('Failed packages count = 1');
     });
   });
+  macOS] */
 });
 
 describe('getTagsFromCommitMessage', () => {

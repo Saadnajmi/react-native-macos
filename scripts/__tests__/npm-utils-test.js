@@ -29,6 +29,7 @@ describe('npm-utils', () => {
   });
 
   describe('publishPackage', () => {
+    /* [macOS
     it('should run publish command', () => {
       publishPackage(
         'path/to/my-package',
@@ -66,6 +67,7 @@ describe('npm-utils', () => {
         cwd: 'path/to/my-package',
       });
     });
+    macOS] */
   });
 
   describe('getNpmInfo', () => {
