@@ -558,7 +558,7 @@ exports.examples = [
   // [macOS
   {
     title: 'Color With System Effect macOS',
-    render(): React.Element<any> {
+    render(): React.Node {
       return <ColorWithSystemEffectMacOSExample />;
     },
   }, // macOS]

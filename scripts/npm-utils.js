@@ -168,10 +168,8 @@ function publishPackage(
     ? {...execOptions, cwd: packagePath}
     : {cwd: packagePath};
 
-  // [macOS Skip NPM Publish as we do that in our Azure Pipeline
-  //return exec(`npm publish${tagsFlag}${otpFlag}${accessFlag}`, options);
-  return 0;
-  // macOS]
+  // [macOS] Skip NPM Publish by running as a dry run as we do that in our Azure Pipeline
+  return exec(`npm publish${tagsFlag}${otpFlag}${accessFlag} --dry-run`, options);
 }
 
 /**
