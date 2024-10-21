@@ -90,7 +90,9 @@ using namespace facebook::react;
   }
 
   if (newConcreteProps.tintColor != oldConcreteProps.tintColor) {
+#if !TARGET_OS_OSX // [macOS]
     _refreshControl.tintColor = RCTUIColorFromSharedColor(newConcreteProps.tintColor);
+#endif // [macOS]
   }
 
   if (newConcreteProps.progressViewOffset != oldConcreteProps.progressViewOffset) {
@@ -129,7 +131,7 @@ using namespace facebook::react;
       -progressViewOffset,
       _refreshControl.bounds.size.width,
       _refreshControl.bounds.size.height);
-#if !TARGET_OS_OSX // [macOS]
+#endif // [macOS]
 }
 
 - (void)_updateTitle
