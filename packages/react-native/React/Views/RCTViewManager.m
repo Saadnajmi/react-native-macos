@@ -13,7 +13,7 @@
 #import "RCTBridge.h"
 #import "RCTConvert+Transform.h"
 #import "RCTConvert.h"
-#import "RCTCursor.h" // [macOS] [visionOS]
+#import "RCTCursor.h"
 #import "RCTLog.h"
 #import "RCTShadowView.h"
 #import "RCTUIManager.h"
@@ -241,7 +241,7 @@ RCT_REMAP_VIEW_PROPERTY(testID, reactAccessibilityElement.accessibilityIdentifie
 
 RCT_EXPORT_VIEW_PROPERTY(backgroundColor, UIColor)
 RCT_REMAP_VIEW_PROPERTY(backfaceVisibility, layer.doubleSided, css_backface_visibility_t)
-RCT_EXPORT_VIEW_PROPERTY(cursor, RCTCursor) // [visionOS]
+RCT_EXPORT_VIEW_PROPERTY(cursor, RCTCursor)
 #if !TARGET_OS_OSX // [macOS]
 RCT_REMAP_VIEW_PROPERTY(opacity, alpha, CGFloat)
 #else // [macOS
@@ -392,6 +392,30 @@ RCT_CUSTOM_VIEW_PROPERTY(accessibilityState, NSDictionary, RCTView)
   }
 }
 
+#if !TARGET_OS_OSX // [macOS]
+RCT_CUSTOM_VIEW_PROPERTY(accessibilityShowsLargeContentViewer, BOOL, RCTView)
+{
+  if (@available(iOS 13.0, *)) {
+    BOOL showsLargeContentViewer = json ? [RCTConvert BOOL:json] : defaultView.showsLargeContentViewer;
+
+    if (showsLargeContentViewer) {
+      view.showsLargeContentViewer = YES;
+      UILargeContentViewerInteraction *interaction = [[UILargeContentViewerInteraction alloc] init];
+      [view addInteraction:interaction];
+    } else {
+      view.showsLargeContentViewer = NO;
+    }
+  }
+}
+
+RCT_CUSTOM_VIEW_PROPERTY(accessibilityLargeContentTitle, NSString, RCTView)
+{
+  if (@available(iOS 13.0, *)) {
+    view.largeContentTitle = json ? [RCTConvert NSString:json] : defaultView.largeContentTitle;
+  }
+}
+#endif // [macOS]
+
 RCT_CUSTOM_VIEW_PROPERTY(nativeID, NSString *, RCTView)
 {
   view.nativeID = json ? [RCTConvert NSString:json] : defaultView.nativeID;
@@ -445,9 +469,9 @@ RCT_CUSTOM_VIEW_PROPERTY(borderCurve, RCTBorderCurve, RCTView)
 RCT_CUSTOM_VIEW_PROPERTY(borderRadius, CGFloat, RCTView)
 {
   if ([view respondsToSelector:@selector(setBorderRadius:)]) {
-    view.borderRadius = json ? [RCTConvert CGFloat:json] : defaultView.borderRadius;
+    view.borderRadius = json ? RCTJSONParseOnlyNumber(json) : defaultView.borderRadius;
   } else {
-    view.layer.cornerRadius = json ? [RCTConvert CGFloat:json] : defaultView.layer.cornerRadius;
+    view.layer.cornerRadius = json ? RCTJSONParseOnlyNumber(json) : defaultView.layer.cornerRadius;
   }
 }
 RCT_CUSTOM_VIEW_PROPERTY(borderColor, UIColor, RCTView)
@@ -533,7 +557,35 @@ RCT_CUSTOM_VIEW_PROPERTY(collapsable, BOOL, RCTView)
   // filtered by view configs.
 }
 
+RCT_CUSTOM_VIEW_PROPERTY(collapsableChildren, BOOL, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
 RCT_CUSTOM_VIEW_PROPERTY(experimental_layoutConformance, NSString *, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_VIEW_PROPERTY(experimental_filter, NSArray *, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_VIEW_PROPERTY(experimental_boxShadow, NSArray *, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_VIEW_PROPERTY(experimental_mixBlendMode, NSString *, RCTView)
 {
   // Property is only to be used in the new renderer.
   // It is necessary to add it here, otherwise it gets
@@ -564,12 +616,12 @@ RCT_VIEW_BORDER_PROPERTY(Block)
 RCT_VIEW_BORDER_PROPERTY(BlockEnd)
 RCT_VIEW_BORDER_PROPERTY(BlockStart)
 
-#define RCT_VIEW_BORDER_RADIUS_PROPERTY(SIDE)                                                          \
-  RCT_CUSTOM_VIEW_PROPERTY(border##SIDE##Radius, CGFloat, RCTView)                                     \
-  {                                                                                                    \
-    if ([view respondsToSelector:@selector(setBorder##SIDE##Radius:)]) {                               \
-      view.border##SIDE##Radius = json ? [RCTConvert CGFloat:json] : defaultView.border##SIDE##Radius; \
-    }                                                                                                  \
+#define RCT_VIEW_BORDER_RADIUS_PROPERTY(SIDE)                                                             \
+  RCT_CUSTOM_VIEW_PROPERTY(border##SIDE##Radius, CGFloat, RCTView)                                        \
+  {                                                                                                       \
+    if ([view respondsToSelector:@selector(setBorder##SIDE##Radius:)]) {                                  \
+      view.border##SIDE##Radius = json ? RCTJSONParseOnlyNumber(json) : defaultView.border##SIDE##Radius; \
+    }                                                                                                     \
   }
 
 RCT_VIEW_BORDER_RADIUS_PROPERTY(TopLeft)
@@ -635,6 +687,55 @@ RCT_EXPORT_SHADOW_PROPERTY(borderStartWidth, float)
 RCT_EXPORT_SHADOW_PROPERTY(borderEndWidth, float)
 RCT_EXPORT_SHADOW_PROPERTY(borderWidth, float)
 
+RCT_CUSTOM_SHADOW_PROPERTY(inset, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(insetBlock, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(insetBlockStart, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(insetBlockEnd, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(insetInline, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(insetInlineStart, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(insetInlineEnd, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
 RCT_EXPORT_SHADOW_PROPERTY(marginTop, YGValue)
 RCT_EXPORT_SHADOW_PROPERTY(marginRight, YGValue)
 RCT_EXPORT_SHADOW_PROPERTY(marginBottom, YGValue)
@@ -645,6 +746,48 @@ RCT_EXPORT_SHADOW_PROPERTY(marginVertical, YGValue)
 RCT_EXPORT_SHADOW_PROPERTY(marginHorizontal, YGValue)
 RCT_EXPORT_SHADOW_PROPERTY(margin, YGValue)
 
+RCT_CUSTOM_SHADOW_PROPERTY(marginBlock, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(marginBlockEnd, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(marginBlockStart, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(marginInline, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(marginInlineEnd, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(marginInlineStart, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
 RCT_EXPORT_SHADOW_PROPERTY(paddingTop, YGValue)
 RCT_EXPORT_SHADOW_PROPERTY(paddingRight, YGValue)
 RCT_EXPORT_SHADOW_PROPERTY(paddingBottom, YGValue)
@@ -654,6 +797,48 @@ RCT_EXPORT_SHADOW_PROPERTY(paddingEnd, YGValue)
 RCT_EXPORT_SHADOW_PROPERTY(paddingVertical, YGValue)
 RCT_EXPORT_SHADOW_PROPERTY(paddingHorizontal, YGValue)
 RCT_EXPORT_SHADOW_PROPERTY(padding, YGValue)
+
+RCT_CUSTOM_SHADOW_PROPERTY(paddingBlock, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(paddingBlockEnd, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(paddingBlockStart, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(paddingInline, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(paddingInlineEnd, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
+
+RCT_CUSTOM_SHADOW_PROPERTY(paddingInlineStart, YGValue, RCTView)
+{
+  // Property is only to be used in the new renderer.
+  // It is necessary to add it here, otherwise it gets
+  // filtered by view configs.
+}
 
 RCT_EXPORT_SHADOW_PROPERTY(flex, float)
 RCT_EXPORT_SHADOW_PROPERTY(flexGrow, float)
@@ -667,9 +852,9 @@ RCT_EXPORT_SHADOW_PROPERTY(alignSelf, YGAlign)
 RCT_EXPORT_SHADOW_PROPERTY(alignContent, YGAlign)
 RCT_EXPORT_SHADOW_PROPERTY(position, YGPositionType)
 RCT_EXPORT_SHADOW_PROPERTY(aspectRatio, float)
-RCT_EXPORT_SHADOW_PROPERTY(rowGap, float)
-RCT_EXPORT_SHADOW_PROPERTY(columnGap, float)
-RCT_EXPORT_SHADOW_PROPERTY(gap, float)
+RCT_EXPORT_SHADOW_PROPERTY(rowGap, YGValue)
+RCT_EXPORT_SHADOW_PROPERTY(columnGap, YGValue)
+RCT_EXPORT_SHADOW_PROPERTY(gap, YGValue)
 
 RCT_EXPORT_SHADOW_PROPERTY(overflow, YGOverflow)
 RCT_EXPORT_SHADOW_PROPERTY(display, YGDisplay)
@@ -715,5 +900,13 @@ RCT_EXPORT_VIEW_PROPERTY(onPointerOver, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onPointerOut, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onGotPointerCapture, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onLostPointerCapture, RCTBubblingEventBlock)
+
+CGFloat RCTJSONParseOnlyNumber(id json)
+{
+  if ([json isKindOfClass:[NSNumber class]]) {
+    return [RCTConvert CGFloat:json];
+  }
+  return 0.0f;
+}
 
 @end

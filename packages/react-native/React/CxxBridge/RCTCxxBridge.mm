@@ -9,11 +9,13 @@
 #include <future>
 
 #import <React/RCTAssert.h>
+#import <React/RCTBridge+Inspector.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTBridge.h>
 #import <React/RCTBridgeMethod.h>
 #import <React/RCTBridgeModule.h>
 #import <React/RCTBridgeModuleDecorator.h>
+#import <React/RCTCallInvoker.h>
 #import <React/RCTConstants.h>
 #import <React/RCTConvert.h>
 #import <React/RCTCxxBridgeDelegate.h>
@@ -28,6 +30,7 @@
 #import <React/RCTPerformanceLogger.h>
 #import <React/RCTProfile.h>
 #import <React/RCTRedBox.h>
+#import <React/RCTRedBoxSetEnabled.h>
 #import <React/RCTReloadCommand.h>
 #import <React/RCTTurboModuleRegistry.h>
 #import <React/RCTUtils.h>
@@ -106,7 +109,7 @@ class GetDescAdapter : public JSExecutorFactory {
   std::shared_ptr<JSExecutorFactory> factory_;
 };
 
-}
+} // namespace
 
 static void mapReactMarkerToPerformanceLogger(
     const ReactMarker::ReactMarkerId markerId,
@@ -160,14 +163,16 @@ static void mapReactMarkerToPerformanceLogger(
 
 static void registerPerformanceLoggerHooks(RCTPerformanceLogger *performanceLogger)
 {
+  std::unique_lock lock(ReactMarker::logTaggedMarkerImplMutex);
   __weak RCTPerformanceLogger *weakPerformanceLogger = performanceLogger;
-  ReactMarker::logTaggedMarkerImpl = [weakPerformanceLogger](
-                                         const ReactMarker::ReactMarkerId markerId, const char *tag) {
+  ReactMarker::LogTaggedMarker newMarker = [weakPerformanceLogger](
+                                               const ReactMarker::ReactMarkerId markerId, const char *tag) {
     mapReactMarkerToPerformanceLogger(markerId, weakPerformanceLogger, tag);
   };
+  ReactMarker::logTaggedMarkerImpl = newMarker;
 }
 
-@interface RCTCxxBridge ()
+@interface RCTCxxBridge () <RCTModuleDataCallInvokerProvider>
 
 @property (nonatomic, weak, readonly) RCTBridge *parentBridge;
 @property (nonatomic, assign, readonly) BOOL moduleSetupComplete;
@@ -191,7 +196,7 @@ struct RCTInstanceCallback : public InstanceCallback {
 
 @implementation RCTCxxBridge {
   BOOL _didInvalidate;
-  BOOL _moduleRegistryCreated;
+  std::atomic<BOOL> _moduleRegistryCreated;
 
   NSMutableArray<RCTPendingCall> *_pendingCalls;
   std::atomic<NSInteger> _pendingCount;
@@ -218,12 +223,32 @@ struct RCTInstanceCallback : public InstanceCallback {
   RCTViewRegistry *_viewRegistry_DEPRECATED;
   RCTBundleManager *_bundleManager;
   RCTCallableJSModules *_callableJSModules;
+  std::atomic<BOOL> _loading;
+  std::atomic<BOOL> _valid;
 }
 
 @synthesize bridgeDescription = _bridgeDescription;
-@synthesize loading = _loading;
 @synthesize performanceLogger = _performanceLogger;
-@synthesize valid = _valid;
+
+- (BOOL)isLoading
+{
+  return _loading;
+}
+
+- (void)setLoading:(BOOL)newValue
+{
+  _loading = newValue;
+}
+
+- (BOOL)isValid
+{
+  return _valid;
+}
+
+- (void)setValid:(BOOL)newValue
+{
+  _valid = newValue;
+}
 
 - (RCTModuleRegistry *)moduleRegistry
 {
@@ -449,7 +474,7 @@ struct RCTInstanceCallback : public InstanceCallback {
   // pointer into a member of RCTBridge! But we only use it while _reactInstance exists, meaning we
   // haven't been invalidated, and therefore RCTBridge hasn't been deallocated yet.
   RCTAssertMainQueue();
-  facebook::react::jsinspector_modern::PageTarget *parentInspectorTarget = _parentBridge.inspectorTarget;
+  facebook::react::jsinspector_modern::HostTarget *parentInspectorTarget = _parentBridge.inspectorTarget;
 
   // Dispatch the instance initialization as soon as the initial module metadata has
   // been collected (see initModules)
@@ -670,7 +695,7 @@ struct RCTInstanceCallback : public InstanceCallback {
 }
 
 - (void)_initializeBridge:(std::shared_ptr<JSExecutorFactory>)executorFactory
-    parentInspectorTarget:(facebook::react::jsinspector_modern::PageTarget *)parentInspectorTarget
+    parentInspectorTarget:(facebook::react::jsinspector_modern::HostTarget *)parentInspectorTarget
 {
   if (!self.valid) {
     return;
@@ -703,7 +728,7 @@ struct RCTInstanceCallback : public InstanceCallback {
 }
 
 - (void)_initializeBridgeLocked:(std::shared_ptr<JSExecutorFactory>)executorFactory
-          parentInspectorTarget:(facebook::react::jsinspector_modern::PageTarget *)parentInspectorTarget
+          parentInspectorTarget:(facebook::react::jsinspector_modern::HostTarget *)parentInspectorTarget
 {
   std::lock_guard<std::mutex> guard(_moduleRegistryLock);
 
@@ -777,6 +802,7 @@ struct RCTInstanceCallback : public InstanceCallback {
                                     viewRegistry_DEPRECATED:_viewRegistry_DEPRECATED
                                               bundleManager:_bundleManager
                                           callableJSModules:_callableJSModules];
+    moduleData.callInvokerProvider = self;
     BridgeNativeModulePerfLogger::moduleDataCreateEnd([moduleName UTF8String], moduleDataId);
 
     _moduleDataByName[moduleName] = moduleData;
@@ -1096,7 +1122,8 @@ struct RCTInstanceCallback : public InstanceCallback {
 
   if (self->_valid && !self->_loading) {
     if ([error userInfo][RCTJSRawStackTraceKey]) {
-      [self.redBox showErrorMessage:[error localizedDescription] withRawStack:[error userInfo][RCTJSRawStackTraceKey]];
+      RCTRedBox *redBox = RCTRedBoxGetEnabled() ? [self.moduleRegistry moduleForName:"RedBox"] : nil;
+      [redBox showErrorMessage:[error localizedDescription] withRawStack:[error userInfo][RCTJSRawStackTraceKey]];
     }
 
     RCTFatal(error);
@@ -1111,7 +1138,7 @@ struct RCTInstanceCallback : public InstanceCallback {
 
   // Hack: once the bridge is invalidated below, it won't initialize any new native
   // modules. Initialize the redbox module now so we can still report this error.
-  RCTRedBox *redBox = [self redBox];
+  RCTRedBox *redBox = RCTRedBoxGetEnabled() ? [self.moduleRegistry moduleForName:"RedBox"] : nil;
 
   _loading = NO;
   _valid = NO;
@@ -1578,7 +1605,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithBundleURL
   return _reactInstance->getJavaScriptContext();
 }
 
-- (void)invokeAsync:(std::function<void()> &&)func
+- (void)invokeAsync:(CallFunc &&)func
 {
   __block auto retainedFunc = std::move(func);
   __weak __typeof(self) weakSelf = self;
@@ -1602,6 +1629,13 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithBundleURL
     (std::shared_ptr<NativeMethodCallInvoker>)nativeInvoker
 {
   return _reactInstance ? _reactInstance->getDecoratedNativeMethodCallInvoker(nativeInvoker) : nullptr;
+}
+
+#pragma mark - RCTModuleDataCallInvokerProvider
+
+- (RCTCallInvoker *)callInvokerForModuleData:(RCTModuleData *)moduleData
+{
+  return [[RCTCallInvoker alloc] initWithCallInvoker:self.jsCallInvoker];
 }
 
 @end

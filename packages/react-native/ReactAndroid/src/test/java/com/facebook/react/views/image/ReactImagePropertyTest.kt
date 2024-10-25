@@ -12,21 +12,22 @@ import android.util.DisplayMetrics
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.facebook.drawee.drawable.ScalingUtils
 import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.BridgeReactContext
 import com.facebook.react.bridge.CatalystInstance
 import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
-import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactTestHelper.createMockCatalystInstance
 import com.facebook.react.bridge.WritableArray
 import com.facebook.react.bridge.WritableMap
+import com.facebook.react.internal.featureflags.ReactNativeFeatureFlags
 import com.facebook.react.uimanager.DisplayMetricsHolder
 import com.facebook.react.uimanager.ReactStylesDiffMap
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.util.RNLog
 import com.facebook.react.views.imagehelper.ImageSource
 import com.facebook.soloader.SoLoader
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -37,15 +38,22 @@ import org.mockito.Mockito.mockStatic
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
-/** Verify that [ScalingUtils] properties are being applied correctly by [ReactImageManager]. */
+/**
+ * Verify that [ScalingUtils] properties are being applied correctly by [ReactImageManager].
+ *
+ * TODO T195191609: The border rendering tests rely on introspecting Fresco tree, which is no longer
+ * relevant when "useNewReactImageViewBackgroundDrawing" is enabled. These should be replaced by
+ * screenshot tests over the existing RNTester examples.
+ */
 @RunWith(RobolectricTestRunner::class)
 class ReactImagePropertyTest {
 
-  private var context: ReactApplicationContext? = null
-  private var catalystInstanceMock: CatalystInstance? = null
-  private var themeContext: ThemedReactContext? = null
+  private lateinit var context: BridgeReactContext
+  private lateinit var catalystInstanceMock: CatalystInstance
+  private lateinit var themeContext: ThemedReactContext
   private lateinit var arguments: MockedStatic<Arguments>
   private lateinit var rnLog: MockedStatic<RNLog>
+  private lateinit var featureFlags: MockedStatic<ReactNativeFeatureFlags>
 
   @Before
   fun setup() {
@@ -56,10 +64,16 @@ class ReactImagePropertyTest {
     rnLog = mockStatic(RNLog::class.java)
     rnLog.`when`<Boolean> { RNLog.w(any(), anyString()) }.thenAnswer {}
 
+    // Avoid trying to load ReactNativeFeatureFlags JNI library
+    featureFlags = mockStatic(ReactNativeFeatureFlags::class.java)
+    featureFlags
+        .`when`<Boolean> { ReactNativeFeatureFlags.useNewReactImageViewBackgroundDrawing() }
+        .thenAnswer { false }
+
     SoLoader.setInTestMode()
-    context = ReactApplicationContext(RuntimeEnvironment.getApplication())
+    context = BridgeReactContext(RuntimeEnvironment.getApplication())
     catalystInstanceMock = createMockCatalystInstance()
-    context!!.initializeWithInstance(catalystInstanceMock)
+    context.initializeWithInstance(catalystInstanceMock)
     themeContext = ThemedReactContext(context, context, null, -1)
     Fresco.initialize(context)
     DisplayMetricsHolder.setWindowDisplayMetrics(DisplayMetrics())
@@ -70,6 +84,7 @@ class ReactImagePropertyTest {
     DisplayMetricsHolder.setWindowDisplayMetrics(null)
     arguments.close()
     rnLog.close()
+    featureFlags.close()
   }
 
   private fun buildStyles(vararg keysAndValues: Any?): ReactStylesDiffMap {
@@ -79,34 +94,34 @@ class ReactImagePropertyTest {
   @Test
   fun testBorderColor() {
     val viewManager = ReactImageManager()
-    val view = viewManager.createViewInstance(themeContext!!)
+    val view = viewManager.createViewInstance(themeContext)
     viewManager.updateProperties(
         view,
         buildStyles("src", JavaOnlyArray.of(JavaOnlyMap.of("uri", "http://mysite.com/mypic.jpg"))))
     viewManager.updateProperties(view, buildStyles("borderColor", Color.argb(0, 0, 255, 255)))
     var borderColor = view.hierarchy.roundingParams!!.borderColor
-    Assert.assertEquals(0, Color.alpha(borderColor).toLong())
-    Assert.assertEquals(0, Color.red(borderColor).toLong())
-    Assert.assertEquals(255, Color.green(borderColor).toLong())
-    Assert.assertEquals(255, Color.blue(borderColor).toLong())
+    assertThat(Color.alpha(borderColor)).isEqualTo(0)
+    assertThat(Color.red(borderColor)).isEqualTo(0)
+    assertThat(Color.green(borderColor)).isEqualTo(255)
+    assertThat(Color.blue(borderColor)).isEqualTo(255)
     viewManager.updateProperties(view, buildStyles("borderColor", Color.argb(0, 255, 50, 128)))
     borderColor = view.hierarchy.roundingParams!!.borderColor
-    Assert.assertEquals(0, Color.alpha(borderColor).toLong())
-    Assert.assertEquals(255, Color.red(borderColor).toLong())
-    Assert.assertEquals(50, Color.green(borderColor).toLong())
-    Assert.assertEquals(128, Color.blue(borderColor).toLong())
+    assertThat(Color.alpha(borderColor)).isEqualTo(0)
+    assertThat(Color.red(borderColor)).isEqualTo(255)
+    assertThat(Color.green(borderColor)).isEqualTo(50)
+    assertThat(Color.blue(borderColor)).isEqualTo(128)
     viewManager.updateProperties(view, buildStyles("borderColor", null))
     borderColor = view.hierarchy.roundingParams!!.borderColor
-    Assert.assertEquals(0, Color.alpha(borderColor).toLong())
-    Assert.assertEquals(0, Color.red(borderColor).toLong())
-    Assert.assertEquals(0, Color.green(borderColor).toLong())
-    Assert.assertEquals(0, Color.blue(borderColor).toLong())
+    assertThat(Color.alpha(borderColor)).isEqualTo(0)
+    assertThat(Color.red(borderColor)).isEqualTo(0)
+    assertThat(Color.green(borderColor)).isEqualTo(0)
+    assertThat(Color.blue(borderColor)).isEqualTo(0)
   }
 
   @Test
   fun testRoundedCorners() {
     val viewManager = ReactImageManager()
-    val view = viewManager.createViewInstance(themeContext!!)
+    val view = viewManager.createViewInstance(themeContext)
     viewManager.updateProperties(
         view,
         buildStyles("src", JavaOnlyArray.of(JavaOnlyMap.of("uri", "http://mysite.com/mypic.jpg"))))
@@ -121,28 +136,28 @@ class ReactImagePropertyTest {
   @Test
   fun testAccessibilityFocus() {
     val viewManager = ReactImageManager()
-    val view = viewManager.createViewInstance(themeContext!!)
+    val view = viewManager.createViewInstance(themeContext)
     viewManager.setAccessible(view, true)
-    Assert.assertEquals(true, view.isFocusable)
+    assertThat(view.isFocusable).isTrue()
   }
 
   @Test
   fun testTintColor() {
     val viewManager = ReactImageManager()
-    val view = viewManager.createViewInstance(themeContext!!)
-    Assert.assertNull(view.colorFilter)
+    val view = viewManager.createViewInstance(themeContext)
+    assertThat(view.colorFilter).isNull()
     viewManager.updateProperties(view, buildStyles("tintColor", Color.argb(50, 0, 0, 255)))
     // Can't actually assert the specific color so this is the next best thing.
     // Does the color filter now exist?
-    Assert.assertNotNull(view.colorFilter)
+    assertThat(view.colorFilter).isNotNull()
     viewManager.updateProperties(view, buildStyles("tintColor", null))
-    Assert.assertNull(view.colorFilter)
+    assertThat(view.colorFilter).isNull()
   }
 
   @Test
   fun testNullSrcs() {
     val viewManager = ReactImageManager()
-    val view = viewManager.createViewInstance(themeContext!!)
+    val view = viewManager.createViewInstance(themeContext)
     val sources = Arguments.createArray()
     val srcObj = Arguments.createMap()
     srcObj.putNull("uri")
@@ -151,6 +166,7 @@ class ReactImagePropertyTest {
     sources.pushMap(srcObj)
     viewManager.setSource(view, sources)
     view.maybeUpdateView()
-    Assert.assertEquals(ImageSource.getTransparentBitmapImageSource(view.context), view.imageSource)
+    assertThat(ImageSource.getTransparentBitmapImageSource(view.context))
+        .isEqualTo(view.imageSource)
   }
 }

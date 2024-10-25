@@ -1,8 +1,8 @@
+// @ts-check
 /**
  * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License.
  * @format
- * @ts-check
  */
 'use strict';
 
@@ -20,14 +20,22 @@
  *
  * @typedef {{
  *   name: string;
+ *   path?: string;
  *   isWorkspace: boolean;
  * }} XcodeProject
+ *
+ * @typedef {{
+ *   project?: {
+ *     macos?: {
+ *       sourceDir: string;
+ *       xcodeProject: XcodeProject;
+ *     }
+ *   }
+ * }} ProjectConfig
  */
 
-const findXcodeProject = require('./findXcodeProject');
 const chalk = require('chalk');
 const child_process = require('child_process');
-const fs = require('fs');
 const path = require('path');
 const {logger, CLIError, getDefaultUserTerminal} = (() => {
   const cli = require.resolve('@react-native-community/cli/package.json');
@@ -37,17 +45,11 @@ const {logger, CLIError, getDefaultUserTerminal} = (() => {
 })();
 
 /**
- * @param {string[]} _
- * @param {Record<string, unknown>} _ctx
+ * @param {ProjectConfig} ctx
  * @param {Options} args
+ * @returns {{ sourceDir: string, xcodeProject: XcodeProject, scheme: string }}
  */
-function runMacOS(_, _ctx, args) {
-  if (!fs.existsSync(args.projectPath)) {
-    throw new CLIError(
-      'macOS project folder not found. Are you sure this is a React Native project?',
-    );
-  }
-
+function parseArgs(ctx, args) {
   if (args.configuration) {
     logger.warn(
       'Argument --configuration has been deprecated and will be removed in a future release, please use --mode instead.',
@@ -58,15 +60,20 @@ function runMacOS(_, _ctx, args) {
     }
   }
 
-  process.chdir(args.projectPath);
-
-  const xcodeProject = findXcodeProject(fs.readdirSync('.'));
-  if (!xcodeProject) {
+  const {sourceDir, xcodeProject} = ctx.project?.macos ?? {};
+  if (!sourceDir) {
     throw new CLIError(
-      `Could not find Xcode project files in "${args.projectPath}" folder`,
+      'macOS project folder not found. Are you sure this is a React Native project?',
     );
   }
 
+  if (!xcodeProject) {
+    throw new CLIError(
+      'Xcode project for macOS not found. Did you forget to run `pod install`?',
+    );
+  }
+
+  // TODO: Find schemes using https://github.com/microsoft/rnx-kit/blob/2b4c569cda9e3755ba7afce42d846601bcc7c4e3/packages/tools-apple/src/scheme.ts#L5
   const inferredSchemeName =
     path.basename(xcodeProject.name, path.extname(xcodeProject.name)) +
     '-macOS';
@@ -78,16 +85,37 @@ function runMacOS(_, _ctx, args) {
     } "${chalk.bold(xcodeProject.name)}"`,
   );
 
-  return run(xcodeProject, scheme, args);
+  return {sourceDir, xcodeProject, scheme};
 }
 
 /**
+ * @param {string[]} _
+ * @param {ProjectConfig} ctx
+ * @param {Options} args
+ */
+function buildMacOS(_, ctx, args) {
+  const {sourceDir, xcodeProject, scheme} = parseArgs(ctx, args);
+  return buildProject(sourceDir, xcodeProject, scheme, {...args, packager: false});
+}
+
+/**
+ * @param {string[]} _
+ * @param {ProjectConfig} ctx
+ * @param {Options} args
+ */
+function runMacOS(_, ctx, args) {
+  const {sourceDir, xcodeProject, scheme} = parseArgs(ctx, args);
+  return run(sourceDir, xcodeProject, scheme, args);
+}
+
+/**
+ * @param {string} sourceDir
  * @param {XcodeProject} xcodeProject
  * @param {string} scheme
  * @param {Options} args
  */
-async function run(xcodeProject, scheme, args) {
-  await buildProject(xcodeProject, scheme, args);
+async function run(sourceDir, xcodeProject, scheme, args) {
+  await buildProject(sourceDir, xcodeProject, scheme, args);
 
   const buildSettings = getBuildSettings(xcodeProject, args.mode, scheme);
   const appPath = path.join(
@@ -113,7 +141,7 @@ async function run(xcodeProject, scheme, args) {
 
   child_process.exec(
     'open -b ' + bundleID + ' -a ' + '"' + appPath + '"',
-    (error, stdout, stderr) => {
+    (error, _stdout, stderr) => {
       if (error) {
         logger.error('Failed to launch the app', stderr);
       } else {
@@ -124,15 +152,17 @@ async function run(xcodeProject, scheme, args) {
 }
 
 /**
+ * @param {string} sourceDir
  * @param {XcodeProject} xcodeProject
  * @param {string} scheme
  * @param {Options} args
+ * @returns {Promise<void>}
  */
-function buildProject(xcodeProject, scheme, args) {
+function buildProject(sourceDir, xcodeProject, scheme, args) {
   return new Promise((resolve, reject) => {
     const xcodebuildArgs = [
       xcodeProject.isWorkspace ? '-workspace' : '-project',
-      xcodeProject.name,
+      path.join(sourceDir, xcodeProject.path || '.', xcodeProject.name),
       '-configuration',
       args.mode,
       '-scheme',
@@ -272,58 +302,75 @@ function getProcessOptions({packager, terminal, port}) {
   };
 }
 
-module.exports = {
-  name: 'run-macos',
-  description: 'builds your app and starts it',
-  func: runMacOS,
-  examples: [
-    {
-      desc: 'Run the macOS app',
-      cmd: 'react-native run-macos',
-    },
-  ],
-  options: [
-    {
-      name: '--configuration [string]',
-      description:
-        '[Deprecated] Explicitly set the scheme configuration to use',
-      default: 'Debug',
-    },
-    {
-      name: '--mode [string]',
-      description:
-        'Explicitly set the scheme configuration to use, corresponds to `--configuration` in `xcodebuild` command, e.g. Debug, Release.',
-    },
-    {
-      name: '--scheme [string]',
-      description:
-        'Explicitly set Xcode scheme to use, corresponds to `--scheme` in `xcodebuild` command.',
-    },
-    {
-      name: '--project-path [string]',
-      description:
-        'Path relative to project root where the Xcode project ' +
-        '(.xcodeproj) lives.',
-      default: 'macos',
-    },
-    {
-      name: '--no-packager',
-      description: 'Do not launch packager while building',
-    },
-    {
-      name: '--verbose',
-      description: 'Do not use xcpretty even if installed',
-    },
-    {
-      name: '--port [number]',
-      default: process.env.RCT_METRO_PORT || 8081,
-      parse: val => Number(val),
-    },
-    {
-      name: '--terminal [string]',
-      description:
-        'Launches the Metro Bundler in a new window using the specified terminal path.',
-      default: getDefaultUserTerminal,
-    },
-  ],
-};
+const commonOptions = [
+  {
+    name: '--mode [string]',
+    description:
+      'Explicitly set the scheme configuration to use, corresponds to `--configuration` in `xcodebuild` command, e.g. Debug, Release.',
+  },
+  {
+    name: '--scheme [string]',
+    description:
+      'Explicitly set Xcode scheme to use, corresponds to `--scheme` in `xcodebuild` command.',
+  },
+  {
+    name: '--project-path [string]',
+    description:
+      'Path relative to project root where the Xcode project (.xcodeproj) lives.',
+    default: 'macos',
+  },
+  {
+    name: '--verbose',
+    description: 'Do not use xcpretty even if installed',
+  },
+];
+
+module.exports = [
+  {
+    name: 'build-macos',
+    description: 'builds your app',
+    func: buildMacOS,
+    examples: [
+      {
+        desc: 'Build the macOS app',
+        cmd: 'react-native build-macos',
+      },
+    ],
+    options: commonOptions,
+  },
+  {
+    name: 'run-macos',
+    description: 'builds your app and starts it',
+    func: runMacOS,
+    examples: [
+      {
+        desc: 'Run the macOS app',
+        cmd: 'react-native run-macos',
+      },
+    ],
+    options: [
+      {
+        name: '--configuration [string]',
+        description:
+          '[Deprecated] Explicitly set the scheme configuration to use',
+        default: 'Debug',
+      },
+      ...commonOptions,
+      {
+        name: '--no-packager',
+        description: 'Do not launch packager while building',
+      },
+      {
+        name: '--port [number]',
+        default: process.env.RCT_METRO_PORT || 8081,
+        parse: val => Number(val),
+      },
+      {
+        name: '--terminal [string]',
+        description:
+          'Launches the Metro Bundler in a new window using the specified terminal path.',
+        default: getDefaultUserTerminal,
+      },
+    ],
+  },
+];

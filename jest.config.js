@@ -30,24 +30,22 @@ module.exports = {
   testRegex: '/__tests__/.*-test(\\.fb)?\\.js$',
   testPathIgnorePatterns: [
     '/node_modules/',
-    '<rootDir>/packages/react-native/template',
     '<rootDir>/packages/react-native/sdks',
     '<rootDir>/packages/react-native/Libraries/Renderer',
-    '<rootDir>/packages/rn-tester/e2e',
     '<rootDir>/packages/react-native-test-renderer/src',
   ],
   transformIgnorePatterns: ['node_modules/(?!@react-native/)'],
   haste: {
     defaultPlatform: 'ios',
-    platforms: ['ios', 'android', 'macos'],
+    platforms: ['ios', 'android', 'macos'], // [macOS]
   },
+  // [macOS
   moduleNameMapper: {
-    // This module is internal to Meta and used by their custom React renderer.
-    // In tests, we can just use a mock.
-    '^ReactNativeInternalFeatureFlags$':
-      '<rootDir>/packages/react-native/jest/ReactNativeInternalFeatureFlagsMock.js',
-    '^react-native(.*)': '<rootDir>/packages/react-native$1', // [macOS]
+    // These mappers allow out-of-tree platforms tests to resolve RN imports
+    '^react-native/(.*)': '<rootDir>/packages/react-native/$1',
+    '^react-native$': '<rootDir>/packages/react-native/index.js',
   },
+  // macOS]
   moduleFileExtensions: ['fb.js'].concat(defaults.moduleFileExtensions),
   modulePathIgnorePatterns: ['scripts/.*/__fixtures__/'],
   unmockedModulePathPatterns: [

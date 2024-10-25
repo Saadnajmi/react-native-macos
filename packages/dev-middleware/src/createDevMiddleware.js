@@ -9,6 +9,7 @@
  * @oncall react_native
  */
 
+import type {CreateCustomMessageHandlerFn} from './inspector-proxy/CustomMessageHandler';
 import type {BrowserLauncher} from './types/BrowserLauncher';
 import type {EventReporter} from './types/EventReporter';
 import type {Experiments, ExperimentsConfig} from './types/Experiments';
@@ -16,7 +17,6 @@ import type {Logger} from './types/Logger';
 import type {NextHandleFunction} from 'connect';
 
 import InspectorProxy from './inspector-proxy/InspectorProxy';
-import deprecated_openFlipperMiddleware from './middleware/deprecated_openFlipperMiddleware';
 import openDebuggerMiddleware from './middleware/openDebuggerMiddleware';
 import DefaultBrowserLauncher from './utils/DefaultBrowserLauncher';
 import reactNativeDebuggerFrontendPath from '@react-native/debugger-frontend';
@@ -61,11 +61,12 @@ type Options = $ReadOnly<{
   unstable_experiments?: ExperimentsConfig,
 
   /**
-   * An interface for using a modified inspector proxy implementation.
+   * Create custom handler to add support for unsupported CDP events, or debuggers.
+   * This handler is instantiated per logical device and debugger pair.
    *
    * This is an unstable API with no semver guarantees.
    */
-  unstable_InspectorProxy?: Class<InspectorProxy>,
+  unstable_customInspectorMessageHandler?: CreateCustomMessageHandlerFn,
 }>;
 
 type DevMiddlewareAPI = $ReadOnly<{
@@ -80,33 +81,36 @@ export default function createDevMiddleware({
   unstable_browserLauncher = DefaultBrowserLauncher,
   unstable_eventReporter,
   unstable_experiments: experimentConfig = {},
-  unstable_InspectorProxy,
+  unstable_customInspectorMessageHandler,
 }: Options): DevMiddlewareAPI {
   const experiments = getExperiments(experimentConfig);
 
-  const InspectorProxyClass = unstable_InspectorProxy ?? InspectorProxy;
-  const inspectorProxy = new InspectorProxyClass(
+  const inspectorProxy = new InspectorProxy(
     projectRoot,
     serverBaseUrl,
     unstable_eventReporter,
     experiments,
+    unstable_customInspectorMessageHandler,
   );
 
   const middleware = connect()
     .use(
       '/open-debugger',
-      experiments.enableNewDebugger
-        ? openDebuggerMiddleware({
-            serverBaseUrl,
-            inspectorProxy,
-            browserLauncher: unstable_browserLauncher,
-            eventReporter: unstable_eventReporter,
-            experiments,
-            logger,
-          })
-        : deprecated_openFlipperMiddleware({
-            logger,
-          }),
+      openDebuggerMiddleware({
+        serverBaseUrl,
+        inspectorProxy,
+        browserLauncher: unstable_browserLauncher,
+        eventReporter: unstable_eventReporter,
+        experiments,
+        logger,
+      }),
+    )
+    .use(
+      '/debugger-frontend/embedder-static/embedderScript.js',
+      (_req, res) => {
+        res.setHeader('Content-Type', 'application/javascript');
+        res.end('');
+      },
     )
     .use(
       '/debugger-frontend',
@@ -124,7 +128,6 @@ export default function createDevMiddleware({
 
 function getExperiments(config: ExperimentsConfig): Experiments {
   return {
-    enableNewDebugger: config.enableNewDebugger ?? false,
     enableOpenDebuggerRedirect: config.enableOpenDebuggerRedirect ?? false,
     enableNetworkInspector: config.enableNetworkInspector ?? false,
   };

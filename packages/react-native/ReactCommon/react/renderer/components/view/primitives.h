@@ -10,6 +10,7 @@
 #include <react/renderer/graphics/Color.h>
 #include <react/renderer/graphics/RectangleCorners.h>
 #include <react/renderer/graphics/RectangleEdges.h>
+#include <react/renderer/graphics/ValueUnit.h>
 
 #include <array>
 #include <bitset>
@@ -90,6 +91,13 @@ enum class BackfaceVisibility : uint8_t { Auto, Visible, Hidden };
 enum class BorderCurve : uint8_t { Circular, Continuous };
 
 enum class BorderStyle : uint8_t { Solid, Dotted, Dashed };
+
+struct CornerRadii {
+  float vertical{0.0f};
+  float horizontal{0.0f};
+
+  bool operator==(const CornerRadii& other) const = default;
+};
 
 enum class Cursor : uint8_t {
   Auto,
@@ -289,13 +297,13 @@ using BorderWidths = RectangleEdges<Float>;
 using BorderCurves = RectangleCorners<BorderCurve>;
 using BorderStyles = RectangleEdges<BorderStyle>;
 using BorderColors = RectangleEdges<SharedColor>;
-using BorderRadii = RectangleCorners<Float>;
+using BorderRadii = RectangleCorners<CornerRadii>;
 
 using CascadedBorderWidths = CascadedRectangleEdges<Float>;
 using CascadedBorderCurves = CascadedRectangleCorners<BorderCurve>;
 using CascadedBorderStyles = CascadedRectangleEdges<BorderStyle>;
 using CascadedBorderColors = CascadedRectangleEdges<SharedColor>;
-using CascadedBorderRadii = CascadedRectangleCorners<Float>;
+using CascadedBorderRadii = CascadedRectangleCorners<ValueUnit>;
 
 struct BorderMetrics {
   BorderColors borderColors{};

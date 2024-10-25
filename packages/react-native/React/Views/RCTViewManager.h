@@ -19,7 +19,7 @@
 @class RCTSparseArray;
 @class RCTUIManager;
 
-typedef void (^RCTViewManagerUIBlock)(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry); // [macOS]
+typedef void (^RCTViewManagerUIBlock)(RCTUIManager *uiManager, NSDictionary<NSNumber *, __kindof RCTPlatformView *> *viewRegistry); // [macOS]
 
 @interface RCTViewManager : NSObject <RCTBridgeModule>
 
@@ -133,5 +133,8 @@ RCT_REMAP_VIEW_PROPERTY(name, keyPath, type)
 #define RCT_CUSTOM_SHADOW_PROPERTY(name, type, viewClass) \
   RCT_REMAP_SHADOW_PROPERTY(name, __custom__, type)       \
   -(void)set_##name : (id)json forShadowView : (viewClass *)view RCT_DYNAMIC
+
+// Parse a JSON object and only return the number value, eveything else returns a 0
+CGFloat RCTJSONParseOnlyNumber(id json);
 
 @end

@@ -25,7 +25,19 @@
 #import "RCTConversions.h"
 #import "RCTFabricComponentsPlugins.h"
 
+#import <QuartzCore/QuartzCore.h> // [macOS]
+
 using namespace facebook::react;
+
+// ParagraphTextView is an auxiliary view we set as contentView so the drawing
+// can happen on top of the layers manipulated by RCTViewComponentView (the parent view)
+@interface RCTParagraphTextView : RCTUIView // [macOS]
+
+@property (nonatomic) ParagraphShadowNode::ConcreteState::Shared state;
+@property (nonatomic) ParagraphAttributes paragraphAttributes;
+@property (nonatomic) LayoutMetrics layoutMetrics;
+
+@end
 
 #if !TARGET_OS_OSX // [macOS]
 @interface RCTParagraphComponentView () <UIEditMenuInteractionDelegate>
@@ -42,6 +54,7 @@ using namespace facebook::react;
 #if !TARGET_OS_OSX // [macOS]
   UILongPressGestureRecognizer *_longPressGestureRecognizer;
 #endif // [macOS]
+  RCTParagraphTextView *_textView;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -50,9 +63,11 @@ using namespace facebook::react;
     _props = ParagraphShadowNode::defaultSharedProps();
 
 #if !TARGET_OS_OSX  // [macOS]
-    self.contentMode = UIViewContentModeRedraw;
     self.opaque = NO;
 #endif  // [macOS]
+    _textView = [RCTParagraphTextView new];
+    _textView.backgroundColor = RCTUIColor.clearColor; // [macOS]
+    self.contentView = _textView;
   }
 
   return self;
@@ -99,6 +114,7 @@ using namespace facebook::react;
   const auto &newParagraphProps = static_cast<const ParagraphProps &>(*props);
 
   _paragraphAttributes = newParagraphProps.paragraphAttributes;
+  _textView.paragraphAttributes = _paragraphAttributes;
 
   if (newParagraphProps.isSelectable != oldParagraphProps.isSelectable) {
 #if !TARGET_OS_OSX // [macOS]
@@ -115,8 +131,21 @@ using namespace facebook::react;
 
 - (void)updateState:(const State::Shared &)state oldState:(const State::Shared &)oldState
 {
-  _state = std::static_pointer_cast<ParagraphShadowNode::ConcreteState const>(state);
-  [self setNeedsDisplay];
+  _state = std::static_pointer_cast<const ParagraphShadowNode::ConcreteState>(state);
+  _textView.state = _state;
+  [_textView setNeedsDisplay];
+  [self setNeedsLayout];
+}
+
+- (void)updateLayoutMetrics:(const LayoutMetrics &)layoutMetrics
+           oldLayoutMetrics:(const LayoutMetrics &)oldLayoutMetrics
+{
+  // Using stored `_layoutMetrics` as `oldLayoutMetrics` here to avoid
+  // re-applying individual sub-values which weren't changed.
+  [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:_layoutMetrics];
+  _textView.layoutMetrics = _layoutMetrics;
+  [_textView setNeedsDisplay];
+  [self setNeedsLayout];
 }
 
 - (void)prepareForRecycle
@@ -126,30 +155,21 @@ using namespace facebook::react;
   _accessibilityProvider = nil;
 }
 
-- (void)drawRect:(CGRect)rect
+- (void)layoutSubviews
 {
-  if (!_state) {
-    return;
-  }
+  [super layoutSubviews];
 
-  auto textLayoutManager = _state->getData().paragraphLayoutManager.getTextLayoutManager();
-  auto nsTextStorage = _state->getData().paragraphLayoutManager.getHostTextStorage();
-
-  RCTTextLayoutManager *nativeTextLayoutManager =
-      (RCTTextLayoutManager *)unwrapManagedObject(textLayoutManager->getNativeTextLayoutManager());
-
-  CGRect frame = RCTCGRectFromRect(_layoutMetrics.getContentFrame());
-
-  [nativeTextLayoutManager drawAttributedString:_state->getData().attributedString
-                            paragraphAttributes:_paragraphAttributes
-                                          frame:frame
-                                    textStorage:unwrapManagedObject(nsTextStorage)];
+  _textView.frame = self.bounds;
 }
 
 #pragma mark - Accessibility
 
 - (NSString *)accessibilityLabel
 {
+  NSString *label = super.accessibilityLabel;
+  if ([label length] > 0) {
+    return label;
+  }
   return self.attributedText.string;
 }
 
@@ -176,15 +196,18 @@ using namespace facebook::react;
   auto &data = _state->getData();
 
   if (![_accessibilityProvider isUpToDate:data.attributedString]) {
-    auto textLayoutManager = data.paragraphLayoutManager.getTextLayoutManager();
-    RCTTextLayoutManager *nativeTextLayoutManager =
-        (RCTTextLayoutManager *)unwrapManagedObject(textLayoutManager->getNativeTextLayoutManager());
-    CGRect frame = RCTCGRectFromRect(_layoutMetrics.getContentFrame());
-    _accessibilityProvider = [[RCTParagraphComponentAccessibilityProvider alloc] initWithString:data.attributedString
-                                                                                  layoutManager:nativeTextLayoutManager
-                                                                            paragraphAttributes:data.paragraphAttributes
-                                                                                          frame:frame
-                                                                                           view:self];
+    auto textLayoutManager = data.layoutManager.lock();
+    if (textLayoutManager) {
+      RCTTextLayoutManager *nativeTextLayoutManager =
+          (RCTTextLayoutManager *)unwrapManagedObject(textLayoutManager->getNativeTextLayoutManager());
+      CGRect frame = RCTCGRectFromRect(_layoutMetrics.getContentFrame());
+      _accessibilityProvider =
+          [[RCTParagraphComponentAccessibilityProvider alloc] initWithString:data.attributedString
+                                                               layoutManager:nativeTextLayoutManager
+                                                         paragraphAttributes:data.paragraphAttributes
+                                                                       frame:frame
+                                                                        view:self];
+    }
   }
 
   return _accessibilityProvider.accessibilityElements;
@@ -204,7 +227,11 @@ using namespace facebook::react;
     return _eventEmitter;
   }
 
-  auto textLayoutManager = _state->getData().paragraphLayoutManager.getTextLayoutManager();
+  auto textLayoutManager = _state->getData().layoutManager.lock();
+
+  if (!textLayoutManager) {
+    return _eventEmitter;
+  }
 
   RCTTextLayoutManager *nativeTextLayoutManager =
       (RCTTextLayoutManager *)unwrapManagedObject(textLayoutManager->getNativeTextLayoutManager());
@@ -321,3 +348,45 @@ Class<RCTComponentViewProtocol> RCTParagraphCls(void)
 {
   return RCTParagraphComponentView.class;
 }
+
+@implementation RCTParagraphTextView {
+  CAShapeLayer *_highlightLayer;
+}
+
+- (void)drawRect:(CGRect)rect
+{
+  if (!_state) {
+    return;
+  }
+
+  auto textLayoutManager = _state->getData().layoutManager.lock();
+
+  if (!textLayoutManager) {
+    return;
+  }
+
+  RCTTextLayoutManager *nativeTextLayoutManager =
+      (RCTTextLayoutManager *)unwrapManagedObject(textLayoutManager->getNativeTextLayoutManager());
+
+  CGRect frame = RCTCGRectFromRect(_layoutMetrics.getContentFrame());
+
+  [nativeTextLayoutManager drawAttributedString:_state->getData().attributedString
+                            paragraphAttributes:_paragraphAttributes
+                                          frame:frame
+                              drawHighlightPath:^(UIBezierPath *highlightPath) {
+                                if (highlightPath) {
+                                  if (!self->_highlightLayer) {
+                                    self->_highlightLayer = [CAShapeLayer layer];
+                                    self->_highlightLayer.fillColor = [RCTUIColor colorWithWhite:0 alpha:0.25].CGColor; // [macOS]
+                                    [self.layer addSublayer:self->_highlightLayer];
+                                  }
+                                  self->_highlightLayer.position = frame.origin;
+                                  self->_highlightLayer.path = highlightPath.CGPath;
+                                } else {
+                                  [self->_highlightLayer removeFromSuperlayer];
+                                  self->_highlightLayer = nil;
+                                }
+                              }];
+}
+
+@end

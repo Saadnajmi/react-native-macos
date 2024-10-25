@@ -31,7 +31,7 @@ import java.util.List;
 // TODO: T63643819 refactor naming of TextAttributeProps to make explicit that this represents
 // TextAttributes and not TextProps. As part of this refactor extract methods that don't belong to
 // TextAttributeProps (e.g. TextAlign)
-public class TextAttributeProps implements EffectiveTextAttributeProvider {
+public class TextAttributeProps {
 
   // constants for Text Attributes serialization
   public static final short TA_KEY_FOREGROUND_COLOR = 0;
@@ -62,6 +62,8 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
   public static final short TA_KEY_ROLE = 26;
   public static final short TA_KEY_TEXT_TRANSFORM = 27;
 
+  public static final int UNSET = -1;
+
   private static final String PROP_SHADOW_OFFSET = "textShadowOffset";
   private static final String PROP_SHADOW_OFFSET_WIDTH = "width";
   private static final String PROP_SHADOW_OFFSET_HEIGHT = "height";
@@ -82,6 +84,7 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
   protected int mColor;
   protected boolean mIsBackgroundColorSet = false;
   protected int mBackgroundColor;
+  protected float mOpacity = Float.NaN;
 
   protected int mNumberOfLines = ReactConstants.UNSET;
   protected int mFontSize = ReactConstants.UNSET;
@@ -109,6 +112,7 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
 
   protected int mFontStyle = ReactConstants.UNSET;
   protected int mFontWeight = ReactConstants.UNSET;
+
   /**
    * NB: If a font family is used that does not have a style in a certain Android version (ie.
    * monospace bold pre Android 5.0), that style (ie. bold) will not be inherited by nested Text
@@ -132,7 +136,9 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
    */
   protected @Nullable String mFontFamily = null;
 
-  /** @see android.graphics.Paint#setFontFeatureSettings */
+  /**
+   * @see android.graphics.Paint#setFontFeatureSettings
+   */
   protected @Nullable String mFontFeatureSettings = null;
 
   protected boolean mContainsImages = false;
@@ -156,6 +162,7 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
           result.setBackgroundColor(entry.getIntValue());
           break;
         case TA_KEY_OPACITY:
+          result.setOpacity((float) entry.getDoubleValue());
           break;
         case TA_KEY_FONT_FAMILY:
           result.setFontFamily(entry.getStringValue());
@@ -246,6 +253,7 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
         props.hasKey(ViewProps.BACKGROUND_COLOR)
             ? props.getInt(ViewProps.BACKGROUND_COLOR, 0)
             : null);
+    result.setOpacity(getFloatProp(props, ViewProps.OPACITY, Float.NaN));
     result.setFontFamily(getStringProp(props, ViewProps.FONT_FAMILY));
     result.setFontWeight(getStringProp(props, ViewProps.FONT_WEIGHT));
     result.setFontStyle(getStringProp(props, ViewProps.FONT_STYLE));
@@ -342,7 +350,6 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
 
   // Returns a line height which takes into account the requested line height
   // and the height of the inline images.
-  @Override
   public float getEffectiveLineHeight() {
     boolean useInlineViewHeight =
         !Float.isNaN(mLineHeight)
@@ -371,7 +378,6 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
     mLetterSpacingInput = letterSpacing;
   }
 
-  @Override
   @NonNull
   public TextTransform getTextTransform() {
     return mTextTransform;
@@ -392,12 +398,10 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
     return letterSpacingPixels / mFontSize;
   }
 
-  @Override
   public float getEffectiveLetterSpacing() {
     return getLetterSpacing();
   }
 
-  @Override
   public int getEffectiveFontSize() {
     return mFontSize;
   }
@@ -422,7 +426,6 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
     mFontSize = (int) fontSize;
   }
 
-  @Override
   public int getColor() {
     return mColor;
   }
@@ -434,12 +437,10 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
     }
   }
 
-  @Override
   public boolean isColorSet() {
     return mIsColorSet;
   }
 
-  @Override
   public int getBackgroundColor() {
     return mBackgroundColor;
   }
@@ -455,17 +456,22 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
     // }
   }
 
-  @Override
+  public float getOpacity() {
+    return mOpacity;
+  }
+
+  private void setOpacity(float opacity) {
+    mOpacity = opacity;
+  }
+
   public boolean isBackgroundColorSet() {
     return mIsBackgroundColorSet;
   }
 
-  @Override
   public int getFontStyle() {
     return mFontStyle;
   }
 
-  @Override
   public String getFontFamily() {
     return mFontFamily;
   }
@@ -572,12 +578,10 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
     mFontFeatureSettings = TextUtils.join(", ", features);
   }
 
-  @Override
   public String getFontFeatureSettings() {
     return mFontFeatureSettings;
   }
 
-  @Override
   public int getFontWeight() {
     return mFontWeight;
   }
@@ -608,12 +612,10 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
     }
   }
 
-  @Override
   public boolean isUnderlineTextDecorationSet() {
     return mIsUnderlineTextDecorationSet;
   }
 
-  @Override
   public boolean isLineThroughTextDecorationSet() {
     return mIsLineThroughTextDecorationSet;
   }
@@ -636,7 +638,6 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
     }
   }
 
-  @Override
   public float getTextShadowOffsetDx() {
     return mTextShadowOffsetDx;
   }
@@ -645,7 +646,6 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
     mTextShadowOffsetDx = PixelUtil.toPixelFromDIP(dx);
   }
 
-  @Override
   public float getTextShadowOffsetDy() {
     return mTextShadowOffsetDy;
   }
@@ -673,7 +673,6 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
     mLayoutDirection = getLayoutDirection(layoutDirection);
   }
 
-  @Override
   public float getTextShadowRadius() {
     return mTextShadowRadius;
   }
@@ -684,7 +683,6 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
     }
   }
 
-  @Override
   public int getTextShadowColor() {
     return mTextShadowColor;
   }
@@ -710,7 +708,6 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
     }
   }
 
-  @Override
   public AccessibilityRole getAccessibilityRole() {
     return mAccessibilityRole;
   }
@@ -724,7 +721,6 @@ public class TextAttributeProps implements EffectiveTextAttributeProvider {
   }
 
   @Nullable
-  @Override
   public Role getRole() {
     return mRole;
   }

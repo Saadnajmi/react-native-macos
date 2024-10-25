@@ -22,7 +22,7 @@ folly_version = folly_config[:version]
 
 header_search_paths = [
   "\"$(PODS_ROOT)/RCT-Folly\"",
-  "\"${PODS_ROOT}/Headers/Public/React-Codegen/react/renderer/components\"",
+  "\"${PODS_ROOT}/Headers/Public/ReactCodegen/react/renderer/components\"",
 ]
 
 Pod::Spec.new do |s|
@@ -45,15 +45,19 @@ Pod::Spec.new do |s|
   s.header_dir             = "RCTLinking"
   s.pod_target_xcconfig    = {
                                "USE_HEADERMAP" => "YES",
-                               "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
+                               "CLANG_CXX_LANGUAGE_STANDARD" => rct_cxx_language_standard(),
                                "HEADER_SEARCH_PATHS" => header_search_paths.join(' ')
                              }
+  # [macOS Restrict UIKit to iOS and visionOS
+  s.ios.framework = "UIKit"
+  s.visionos.framework = "UIKit"
+  # macOS]
 
   s.dependency "React-Core/RCTLinkingHeaders", version
   s.dependency "ReactCommon/turbomodule/core", version
   s.dependency "React-jsi", version
 
-  add_dependency(s, "React-Codegen", :additional_framework_paths => ["build/generated/ios"])
+  add_dependency(s, "ReactCodegen", :additional_framework_paths => ["build/generated/ios"])
   add_dependency(s, "ReactCommon", :subspec => "turbomodule/core", :additional_framework_paths => ["react/nativemodule/core"])
   add_dependency(s, "React-NativeModulesApple", :additional_framework_paths => ["build/generated/ios"])
 end

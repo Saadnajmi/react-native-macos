@@ -11,9 +11,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
-import com.facebook.debug.holder.PrinterHolder;
-import com.facebook.debug.tags.ReactDebugOverlayTags;
-import com.facebook.infer.annotation.Assertions;
+import androidx.annotation.Nullable;
 import com.facebook.infer.annotation.Nullsafe;
 import com.facebook.react.bridge.JSBundleLoader;
 import com.facebook.react.bridge.JavaJSExecutor;
@@ -25,9 +23,6 @@ import com.facebook.react.devsupport.HMRClient;
 import com.facebook.react.devsupport.ReactInstanceDevHelper;
 import com.facebook.react.devsupport.interfaces.DevSplitBundleCallback;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
-import com.facebook.react.runtime.internal.bolts.Continuation;
-import com.facebook.react.runtime.internal.bolts.Task;
-import javax.annotation.Nullable;
 
 /**
  * An implementation of {@link com.facebook.react.devsupport.interfaces.DevSupportManager} that
@@ -51,7 +46,8 @@ class BridgelessDevSupportManager extends DevSupportManagerBase {
         2 /* minNumShakes */,
         null /* customPackagerCommandHandlers */,
         null /* surfaceDelegateFactory */,
-        null /* devLoadingViewManager */);
+        null /* devLoadingViewManager */,
+        null /* pausedInDebuggerOverlayManager */);
     mReactHost = host;
   }
 
@@ -71,20 +67,17 @@ class BridgelessDevSupportManager extends DevSupportManagerBase {
             mReactHost
                 .loadBundle(bundleLoader)
                 .onSuccess(
-                    new Continuation<Boolean, Void>() {
-                      @Override
-                      public Void then(Task<Boolean> task) {
-                        if (task.getResult().equals(Boolean.TRUE)) {
-                          String bundleURL =
-                              getDevServerHelper().getDevServerSplitBundleURL(bundlePath);
-                          ReactContext reactContext = mReactHost.getCurrentReactContext();
-                          if (reactContext != null) {
-                            reactContext.getJSModule(HMRClient.class).registerBundle(bundleURL);
-                          }
-                          callback.onSuccess();
+                    task -> {
+                      if (task.isCompleted()) {
+                        String bundleURL =
+                            getDevServerHelper().getDevServerSplitBundleURL(bundlePath);
+                        ReactContext reactContext = mReactHost.getCurrentReactContext();
+                        if (reactContext != null) {
+                          reactContext.getJSModule(HMRClient.class).registerBundle(bundleURL);
                         }
-                        return null;
+                        callback.onSuccess();
                       }
+                      return null;
                     });
           }
 
@@ -102,24 +95,18 @@ class BridgelessDevSupportManager extends DevSupportManagerBase {
     // dismiss redbox if exists
     hideRedboxDialog();
     mReactHost.reload("BridgelessDevSupportManager.handleReloadJS()");
-
-    PrinterHolder.getPrinter()
-        .logMessage(ReactDebugOverlayTags.RN_CORE, "RNCore: load from Server");
-    String bundleURL =
-        getDevServerHelper().getDevServerBundleURL(Assertions.assertNotNull(getJSAppBundleName()));
-    reloadJSFromServer(bundleURL);
   }
 
   private static ReactInstanceDevHelper createInstanceDevHelper(final ReactHostImpl reactHost) {
     return new ReactInstanceDevHelper() {
       @Override
       public void onReloadWithJSDebugger(JavaJSExecutor.Factory proxyExecutorFactory) {
-        // Not implemented
+        // Not implemented, only used by BridgeDevSupportManager to reload with proxy executor
       }
 
       @Override
       public void onJSBundleLoadedFromServer() {
-        throw new IllegalStateException("Not implemented for bridgeless mode");
+        // Not implemented, only referenced by BridgeDevSupportManager
       }
 
       @Override
@@ -132,7 +119,7 @@ class BridgelessDevSupportManager extends DevSupportManagerBase {
         }
       }
 
-      @androidx.annotation.Nullable
+      @Nullable
       @Override
       public Activity getCurrentActivity() {
         return reactHost.getLastUsedActivity();
@@ -143,7 +130,7 @@ class BridgelessDevSupportManager extends DevSupportManagerBase {
         throw new IllegalStateException("Not implemented for bridgeless mode");
       }
 
-      @androidx.annotation.Nullable
+      @Nullable
       @Override
       public View createRootView(String appKey) {
         Activity currentActivity = getCurrentActivity();

@@ -137,13 +137,16 @@ static ModalHostViewEventEmitter::OnOrientationChange onOrientationChangeStruct(
                    completion:(void (^)(void))completion
 {
   UIViewController *controller = [self reactViewController];
-  [controller presentViewController:modalViewController animated:animated completion:completion];
+  [[self _topMostViewControllerFrom:controller] presentViewController:modalViewController
+                                                             animated:animated
+                                                           completion:completion];
 }
 
 - (void)dismissViewController:(UIViewController *)modalViewController
                      animated:(BOOL)animated
                    completion:(void (^)(void))completion
 {
+  _modalContentsSnapshot = [self.viewController.view snapshotViewAfterScreenUpdates:NO];
   [modalViewController dismissViewControllerAnimated:animated completion:completion];
 }
 
@@ -193,14 +196,6 @@ static ModalHostViewEventEmitter::OnOrientationChange onOrientationChangeStruct(
 
   assert(std::dynamic_pointer_cast<const ModalHostViewEventEmitter>(_eventEmitter));
   return std::static_pointer_cast<const ModalHostViewEventEmitter>(_eventEmitter);
-}
-
-#pragma mark - RCTMountingTransactionObserving
-
-- (void)mountingTransactionWillMount:(const MountingTransaction &)transaction
-                withSurfaceTelemetry:(const facebook::react::SurfaceTelemetry &)surfaceTelemetry
-{
-  _modalContentsSnapshot = [self.viewController.view snapshotViewAfterScreenUpdates:YES];
 }
 
 #pragma mark - UIView methods
@@ -283,8 +278,28 @@ static ModalHostViewEventEmitter::OnOrientationChange onOrientationChangeStruct(
 {
   [childComponentView removeFromSuperview];
 }
-#endif // [macOS]
 
+#pragma mark - Private
+
+- (UIViewController *)_topMostViewControllerFrom:(UIViewController *)rootViewController
+{
+  UIViewController *topController = rootViewController;
+  while (topController.presentedViewController) {
+    topController = topController.presentedViewController;
+  }
+  if ([topController isKindOfClass:[UINavigationController class]]) {
+    UINavigationController *navigationController = (UINavigationController *)topController;
+    topController = navigationController.visibleViewController;
+    return [self _topMostViewControllerFrom:topController];
+  } else if ([topController isKindOfClass:[UITabBarController class]]) {
+    UITabBarController *tabBarController = (UITabBarController *)topController;
+    topController = tabBarController.selectedViewController;
+    return [self _topMostViewControllerFrom:topController];
+  }
+  return topController;
+}
+
+#endif // [macOS]
 @end
 
 #ifdef __cplusplus
