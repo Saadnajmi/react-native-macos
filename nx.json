@@ -28,6 +28,7 @@
         "currentVersionResolverMetadata": {
           "tag": "nightly"
         },
+        "fallbackCurrentVersionResolver": "disk",
         "preid": "nightly",
         "skipLockFileUpdate": true
       }
