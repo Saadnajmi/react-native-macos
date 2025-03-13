@@ -28,6 +28,7 @@
         "currentVersionResolverMetadata": {
           "tag": "latest"
         },
+        "fallbackCurrentVersionResolver": "disk",
         "skipLockFileUpdate": true
       }
     }
