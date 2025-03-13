@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "defaultBase": "0.77-stable",
+  "defaultBase": "main",
   "targetDefaults": {
     "build": {
       "dependsOn": [
@@ -28,6 +28,7 @@
         "currentVersionResolverMetadata": {
           "tag": "latest"
         },
+        "fallbackCurrentVersionResolver": "disk",
         "skipLockFileUpdate": true
       }
     }
