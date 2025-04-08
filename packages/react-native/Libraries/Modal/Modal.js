@@ -240,7 +240,7 @@ class Modal extends React.Component<Props, State> {
   }
 
   componentWillUnmount() {
-    if (Platform.OS === 'ios') {
+    if (Platform.OS === 'ios' || Platform.OS === 'macos') {
       this.setState({isRendered: false});
     }
     if (this._eventSubscription) {
@@ -260,7 +260,7 @@ class Modal extends React.Component<Props, State> {
 
   // Helper function to encapsulate platform specific logic to show or not the Modal.
   _shouldShowModal(): boolean {
-    if (Platform.OS === 'ios') {
+    if (Platform.OS === 'ios' || Platform.OS === 'macos') {
       return this.props.visible === true || this.state.isRendered === true;
     }
 
@@ -297,7 +297,7 @@ class Modal extends React.Component<Props, State> {
 
     const onDismiss = () => {
       // OnDismiss is implemented on iOS only.
-      if (Platform.OS === 'ios') {
+      if (Platform.OS === 'ios' || Platform.OS === 'macos') {
         this.setState({isRendered: false}, () => {
           if (this.props.onDismiss) {
             this.props.onDismiss();
@@ -308,22 +308,22 @@ class Modal extends React.Component<Props, State> {
 
     return (
       <RCTModalHostView
-        animationType={animationType}
-        presentationStyle={presentationStyle}
-        transparent={this.props.transparent}
-        hardwareAccelerated={this.props.hardwareAccelerated}
-        onRequestClose={this.props.onRequestClose}
-        onShow={this.props.onShow}
-        onDismiss={onDismiss}
-        visible={this.props.visible}
-        statusBarTranslucent={this.props.statusBarTranslucent}
-        navigationBarTranslucent={this.props.navigationBarTranslucent}
-        identifier={this._identifier}
+        // animationType={animationType}
+        // presentationStyle={presentationStyle}
+        // transparent={this.props.transparent}
+        // hardwareAccelerated={this.props.hardwareAccelerated}
+        // onRequestClose={this.props.onRequestClose}
+        // onShow={this.props.onShow}
+        // onDismiss={onDismiss}
+        // visible={this.props.visible}
+        // statusBarTranslucent={this.props.statusBarTranslucent}
+        // navigationBarTranslucent={this.props.navigationBarTranslucent}
+        // identifier2={this._identifier}
         style={styles.modal}
         // $FlowFixMe[method-unbinding] added when improving typing for this parameters
         onStartShouldSetResponder={this._shouldSetResponder}
-        supportedOrientations={this.props.supportedOrientations}
-        onOrientationChange={this.props.onOrientationChange}
+        // supportedOrientations={this.props.supportedOrientations}
+        // onOrientationChange={this.props.onOrientationChange}
         testID={this.props.testID}>
         <VirtualizedListContextResetter>
           <ScrollView.Context.Provider value={null}>

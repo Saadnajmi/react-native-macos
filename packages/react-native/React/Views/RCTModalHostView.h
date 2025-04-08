@@ -5,8 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#if !TARGET_OS_OSX // [macOS]
-#import <UIKit/UIKit.h>
+#import <React/RCTUIKit.h>
 
 #import <React/RCTInvalidating.h>
 #import <React/RCTModalHostViewManager.h>
@@ -17,10 +16,16 @@
 
 @protocol RCTModalHostViewInteractor;
 
-@interface RCTModalHostView : RCTUIView <RCTInvalidating, UIAdaptivePresentationControllerDelegate> // [macOS]
+#if !TARGET_OS_OSX // [macOS]
+@interface RCTModalHostView : RCTUIView <RCTInvalidating, UIAdaptivePresentationControllerDelegate>
+#else // [macOS
+@interface RCTModalHostView : RCTUIView <RCTInvalidating>
+#endif // macOS]
 
 @property (nonatomic, copy) NSString *animationType;
+#if !TARGET_OS_OSX // [macOS
 @property (nonatomic, assign) UIModalPresentationStyle presentationStyle;
+#endif // macOS]b
 @property (nonatomic, assign, getter=isTransparent) BOOL transparent;
 
 @property (nonatomic, copy) RCTDirectEventBlock onShow;
@@ -31,7 +36,7 @@
 @property (nonatomic, assign) BOOL hardwareAccelerated;
 @property (nonatomic, assign) BOOL animated;
 
-@property (nonatomic, copy) NSNumber *identifier;
+@property (nonatomic, copy) NSNumber *identifier2; // [macOS]
 
 @property (nonatomic, weak) id<RCTModalHostViewInteractor> delegate;
 
@@ -55,4 +60,3 @@
                     animated:(BOOL)animated;
 
 @end
-#endif // [macOS]

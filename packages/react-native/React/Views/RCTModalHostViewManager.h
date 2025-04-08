@@ -9,10 +9,9 @@
 #import <React/RCTInvalidating.h>
 #import <React/RCTViewManager.h>
 
-#if !TARGET_OS_OSX // [macOS]
 typedef void (^RCTModalViewInteractionBlock)(
-    UIViewController *reactViewController,
-    UIViewController *viewController,
+    RCTPlatformViewController *reactViewController, // [macOS]
+    RCTPlatformViewController *viewController, // [macOS]
     BOOL animated,
     dispatch_block_t completionBlock);
 
@@ -27,4 +26,3 @@ typedef void (^RCTModalViewInteractionBlock)(
 @property (nonatomic, strong) RCTModalViewInteractionBlock dismissalBlock;
 
 @end
-#endif // [macOS]

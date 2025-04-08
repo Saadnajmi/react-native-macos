@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#if !TARGET_OS_OSX // [macOS]
 #import "RCTModalHostViewManager.h"
 
 #import "RCTBridge.h"
@@ -41,7 +40,7 @@
 
 RCT_EXPORT_MODULE()
 
-- (UIView *)view
+- (RCTPlatformView *)view // [macOS]
 {
   RCTModalHostView *view = [[RCTModalHostView alloc] initWithBridge:self.bridge];
   view.delegate = self;
@@ -65,9 +64,14 @@ RCT_EXPORT_MODULE()
     if (self->_presentationBlock) {
       self->_presentationBlock([modalHostView reactViewController], viewController, animated, completionBlock);
     } else {
+#if !TARGET_OS_OSX // [macOS]
       [[modalHostView reactViewController] presentViewController:viewController
                                                         animated:animated
                                                       completion:completionBlock];
+#else // [macOS
+      [[modalHostView reactViewController] presentViewControllerAsSheet:viewController];
+      completionBlock();
+#endif // macOS]
     }
   });
 }
@@ -85,7 +89,12 @@ RCT_EXPORT_MODULE()
     if (self->_dismissalBlock) {
       self->_dismissalBlock([modalHostView reactViewController], viewController, animated, completionBlock);
     } else if (viewController.presentingViewController) {
+#if !TARGET_OS_OSX // [macOS]
       [viewController.presentingViewController dismissViewControllerAnimated:animated completion:completionBlock];
+#else // [macOS
+      [[viewController presentingViewController] dismissViewController:viewController];
+      completionBlock();
+#endif // macOS]
     } else {
       // Make sure to call the completion block in case the presenting view controller is nil
       // In an internal app we have a use case where a modal presents another view without bein dismissed
@@ -125,4 +134,3 @@ RCT_EXPORT_VIEW_PROPERTY(onRequestClose, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onDismiss, RCTDirectEventBlock)
 
 @end
-#endif // [macOS]

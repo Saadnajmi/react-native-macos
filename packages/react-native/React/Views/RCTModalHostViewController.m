@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#if !TARGET_OS_OSX // [macOS]
 #import "RCTModalHostViewController.h"
 
 #import "RCTLog.h"
@@ -13,8 +12,10 @@
 
 @implementation RCTModalHostViewController {
   CGRect _lastViewFrame;
+#if !TARGET_OS_OSX // [macOS]
   UIStatusBarStyle _preferredStatusBarStyle;
   BOOL _preferredStatusBarHidden;
+#endif // [macOS]
 }
 
 - (instancetype)init
@@ -23,9 +24,9 @@
     return nil;
   }
 
+#if !TARGET_OS_OSX // [macOS]
   self.modalInPresentation = YES;
 
-#if !TARGET_OS_OSX // [macOS]
   _preferredStatusBarStyle = [RCTUIStatusBarManager() statusBarStyle];
   _preferredStatusBarHidden = [RCTUIStatusBarManager() isStatusBarHidden];
 #endif // [macOS]
@@ -33,9 +34,15 @@
   return self;
 }
 
+#if !TARGET_OS_OSX // [macOS]
 - (void)viewDidLayoutSubviews
 {
   [super viewDidLayoutSubviews];
+#else // [macOS
+- (void)viewDidLayout
+{
+  [super viewDidLayout];
+#endif // macOS]
 
   if (self.boundsDidChangeBlock && !CGRectEqualToRect(_lastViewFrame, self.view.frame)) {
     self.boundsDidChangeBlock(self.view.bounds);
@@ -75,4 +82,3 @@
 #endif // RCT_DEV
 
 @end
-#endif // [macOS]

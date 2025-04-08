@@ -8,7 +8,7 @@
 #import "RCTDevLoadingViewSetEnabled.h"
 
 #if RCT_DEV_MENU
-static BOOL isDevLoadingViewEnabled = YES;
+static BOOL isDevLoadingViewEnabled = NO;
 #else
 static BOOL isDevLoadingViewEnabled = NO;
 #endif
