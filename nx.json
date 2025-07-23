@@ -24,7 +24,6 @@
           "tag": "latest"
         }
       },
-      "manifestRootsToUpdate": ["packages/react-native", "packages/virtualized-lists"],
       "useLegacyVersioning": false
     }
   }
