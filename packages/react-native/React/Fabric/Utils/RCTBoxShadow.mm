@@ -53,13 +53,24 @@ CGRect RCTGetBoundingRect(const std::vector<BoxShadow> &boxShadows, CGSize layer
   CGFloat largestY = layerSize.height;
   for (const auto &boxShadow : boxShadows) {
     if (!boxShadow.inset) {
+#if TARGET_OS_OSX // [macOS
+      // On macOS, add extremely generous padding to prevent any clipping issues
+      // Now that we handle flipping at the context level, use normal coordinate calculations
+      CGFloat padding = 100;
+      CGFloat negativeXExtent = boxShadow.offsetX - boxShadow.spreadDistance - boxShadow.blurRadius - padding;
+      smallestX = MIN(smallestX, negativeXExtent);
+      CGFloat negativeYExtent = boxShadow.offsetY - boxShadow.spreadDistance - boxShadow.blurRadius - padding;
+      CGFloat positiveYExtent = boxShadow.offsetY + boxShadow.spreadDistance + boxShadow.blurRadius + layerSize.height + padding;
+      CGFloat positiveXExtent = boxShadow.offsetX + boxShadow.spreadDistance + boxShadow.blurRadius + layerSize.width + padding;
+#else // iOS
       CGFloat negativeXExtent = boxShadow.offsetX - boxShadow.spreadDistance - boxShadow.blurRadius;
       smallestX = MIN(smallestX, negativeXExtent);
       CGFloat negativeYExtent = boxShadow.offsetY - boxShadow.spreadDistance - boxShadow.blurRadius;
-      smallestY = MIN(smallestY, negativeYExtent);
-      CGFloat positiveXExtent = boxShadow.offsetX + boxShadow.spreadDistance + boxShadow.blurRadius + layerSize.width;
-      largestX = MAX(largestX, positiveXExtent);
       CGFloat positiveYExtent = boxShadow.offsetY + boxShadow.spreadDistance + boxShadow.blurRadius + layerSize.height;
+      CGFloat positiveXExtent = boxShadow.offsetX + boxShadow.spreadDistance + boxShadow.blurRadius + layerSize.width;
+#endif // macOS]
+      smallestY = MIN(smallestY, negativeYExtent);
+      largestX = MAX(largestX, positiveXExtent);
       largestY = MAX(largestY, positiveYExtent);
     }
   }
@@ -115,6 +126,7 @@ static void renderOutsetShadows(
   // drawn all of our shadows. This ensures that we do not need to worry about
   // graphical state carrying over after this function returns
   CGContextSaveGState(context);
+  
   // Reverse iterator as shadows are stacked back to front
   for (auto it = outsetShadows.rbegin(); it != outsetShadows.rend(); ++it) {
     CGContextSaveGState(context);
@@ -123,12 +135,9 @@ static void renderOutsetShadows(
     CGFloat blurRadius = it->blurRadius;
     CGFloat spreadDistance = it->spreadDistance;
     CGColorRef color = colorRefFromSharedColor(it->color);
-      
-    #if TARGET_OS_OSX // [macOS
-      // For some reason, unflipping the context gets outset shadows to (mostly) appear correctly on macOS
-      CGAffineTransform flippedTransform = CGAffineTransformMake(1, 0, 0, -1, 0, boundingRect.size.height);
-      CGContextConcatCTM(context, flippedTransform);
-    #endif // macOS]
+
+    // Clear any existing shadow state before setting new shadow
+    CGContextSetShadowWithColor(context, CGSizeZero, 0, NULL);
 
     // First, define the shadow rect. This is the rect that will be filled
     // and _cast_ the shadow. As a result, the size does not incorporate
@@ -151,7 +160,8 @@ static void renderOutsetShadows(
         context,
         CGSizeMake(
             offsetX - boundingRect.origin.x - spreadDistance - shadowRect.origin.x,
-            offsetY - boundingRect.origin.y - spreadDistance),
+            offsetY - boundingRect.origin.y - spreadDistance
+            ),
         blurRadius,
         color);
 
@@ -265,7 +275,13 @@ static void renderInsetShadows(
     // it is positioned on top of the view. We subtract blurRadius because the
     // shadow rect is padded.
     CGContextSetShadowWithColor(
-        context, CGSizeMake(-offsetToMoveOffscreen.x, -offsetToMoveOffscreen.y), blurRadius, color);
+        context, 
+        CGSizeMake(
+            -offsetToMoveOffscreen.x,
+            -offsetToMoveOffscreen.y
+        ), 
+        blurRadius, 
+        color);
 
     // Fourth, the Core Graphics functions to actually draw the shadow rect
     // and thus the shadow itself. Note we use an EO fill path so that the
@@ -298,12 +314,25 @@ UIImage *RCTGetBoxShadowImage(
       [renderer imageWithActions:^(RCTUIGraphicsImageRendererContext *_Nonnull rendererContext) { // [macOS]
         auto [outsetShadows, insetShadows] = splitBoxShadowsByInset(shadows);
         const CGContextRef context = rendererContext.CGContext;
+        
+#if TARGET_OS_OSX // [macOS
+        // On macOS, the image renderer creates a flipped context which causes issues with shadow positioning
+        // Let's try to compensate by adjusting the context transform
+        CGContextSaveGState(context);
+        CGContextTranslateCTM(context, 0, boundingRect.size.height);
+        CGContextScaleCTM(context, 1.0, -1.0);
+#endif // macOS]
+        
         // Outset shadows should be before inset shadows since outset needs to
         // clear out a region in the view so we do not block its contents.
         // Inset shadows could draw over those outset shadows but if the shadow
         // colors have alpha < 1 then we will have inaccurate alpha compositing
         renderOutsetShadows(outsetShadows, cornerRadii, layer, boundingRect, context);
         renderInsetShadows(insetShadows, cornerRadii, edgeInsets, layer, boundingRect, context);
+        
+#if TARGET_OS_OSX // [macOS
+        CGContextRestoreGState(context);
+#endif // macOS]
       }];
 
   return boxShadowImage;
