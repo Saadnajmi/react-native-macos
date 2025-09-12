@@ -77,11 +77,7 @@ const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
   return _props;
 }
 
-#if !TARGET_OS_OSX // [macOS]
-- (void)setContentView:(RCTUIView *)contentView // [macOS]
-#else // [macOS
 - (void)setContentView:(RCTPlatformView *)contentView // [macOS]
-#endif // macOS]
 {
   if (_contentView) {
     [_contentView removeFromSuperview];
@@ -128,6 +124,18 @@ const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
     [self addCursorRect:self.bounds cursor:cursor];
   }
 }
+
+- (BOOL)needsPanelToBecomeKey {
+  // We need to override this so that mouse clicks don't move keyboard focus on focusable views by default.
+  return false;
+}
+
+- (BOOL)acceptsFirstResponder
+
+{
+  return [self focusable] || [super acceptsFirstResponder];
+}
+
 #endif // macOS]
 
 #if !TARGET_OS_OSX
@@ -139,7 +147,7 @@ const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
     [self invalidateLayer];
   }
 }
-#else // [macOS SAAD
+#else // [macOS
 - (void)viewDidChangeEffectiveAppearance
 {
   [super viewDidChangeEffectiveAppearance];
