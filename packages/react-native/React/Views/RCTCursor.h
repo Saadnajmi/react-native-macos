@@ -7,7 +7,9 @@
 
 #import <Foundation/Foundation.h>
 #import <React/RCTDefines.h> // [macOS]
+#if TARGET_OS_OSX // [macOS
 #import <AppKit/AppKit.h>
+#endif // macOS]
 
 typedef NS_ENUM(NSInteger, RCTCursor) {
   // [macOS
