@@ -25,14 +25,11 @@
 #import <React/RCTComponentViewProtocol.h>
 #import <react/nativemodule/defaults/DefaultTurboModules.h>
 
+using namespace facebook::react;
+
 #if TARGET_OS_OSX // [macOS
 static NSString *sRCTAppDelegateMainWindowFrameAutoSaveName = @"RCTAppDelegateMainWindow";
 #endif // macOS]
-
-using namespace facebook::react;
-
-@interface RCTAppDelegate () <RCTComponentViewFactoryComponentProvider, RCTHostDelegate>
-@end
 
 @implementation RCTAppDelegate
 
