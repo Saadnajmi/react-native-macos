@@ -400,11 +400,79 @@ RCT_EXPORT_MODULE()
                       [RCTPresentedViewController() presentViewController:alertController animated:YES completion:NULL];
 #else // [macOS
                       NSAlert *alert = [NSAlert new];
-                      [alert setMessageText:@"Change packager location"];
-                      [alert setInformativeText:@"Input packager IP, port and entrypoint"];
-                      [alert addButtonWithTitle:@"Use bundled JS"];
-                      [alert setAlertStyle:NSAlertStyleWarning];
-                      [alert beginSheetModalForWindow:[NSApp keyWindow] completionHandler:nil];
+                      [alert setMessageText:@"Configure Bundler"];
+                      [alert setInformativeText:@"Provide a custom bundler address, port, and entrypoint."];
+                      [alert setAlertStyle:NSAlertStyleInformational];
+                      [alert addButtonWithTitle:@"Apply Changes"];
+                      [alert addButtonWithTitle:@"Reset to Default"];
+                      [alert addButtonWithTitle:@"Cancel"];
+
+                      NSTextField *ipTextField = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 260, 24)];
+                      [ipTextField setStringValue:@""];
+                      [ipTextField setPlaceholderString:@"0.0.0.0"];
+
+                      NSTextField *portTextField = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 260, 24)];
+                      [portTextField setStringValue:@""];
+                      [portTextField setPlaceholderString:@"8081"];
+
+                      NSTextField *bundleRootTextField =
+                          [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 260, 24)];
+                      [bundleRootTextField setStringValue:@""];
+                      [bundleRootTextField setPlaceholderString:@"index"];
+
+                      NSArray<NSTextField *> *fields = @[ ipTextField, portTextField, bundleRootTextField ];
+                      NSStackView *stackView = [[NSStackView alloc] initWithFrame:NSMakeRect(0, 0, 260, 88)];
+                      [stackView setOrientation:NSUserInterfaceLayoutOrientationVertical];
+                      [stackView setAlignment:NSLayoutAttributeLeading];
+                      [stackView setSpacing:8.0];
+                      for (NSTextField *field in fields) {
+                        [stackView addArrangedSubview:field];
+                      }
+
+                      alert.accessoryView = stackView;
+
+                      NSWindow *presentingWindow = [NSApp keyWindow] ?: [NSApp mainWindow];
+                      void (^handleResponse)(NSModalResponse) = ^(NSModalResponse response) {
+                        if (response == NSAlertFirstButtonReturn) {
+                          NSString *ip = ipTextField.stringValue;
+                          NSString *portString = portTextField.stringValue;
+                          NSString *bundleRoot = bundleRootTextField.stringValue;
+                          if (ip.length == 0 && portString.length == 0) {
+                            [weakSelf setDefaultJSBundle];
+                            return;
+                          }
+
+                          NSNumberFormatter *formatter = [NSNumberFormatter new];
+                          formatter.numberStyle = NSNumberFormatterDecimalStyle;
+                          NSNumber *portNumber = [formatter numberFromString:portString];
+                          if (portNumber == nil) {
+                            portNumber = [NSNumber numberWithInt:RCT_METRO_PORT];
+                          }
+
+                          [RCTBundleURLProvider sharedSettings].jsLocation =
+                              [NSString stringWithFormat:@"%@:%d", ip, portNumber.intValue];
+                          if (bundleRoot.length == 0) {
+                            [bundleManager resetBundleURL];
+                          } else {
+                            bundleManager.bundleURL =
+                                [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:bundleRoot];
+                          }
+
+                          RCTTriggerReloadCommandListeners(@"Dev menu - apply changes");
+                        } else if (response == NSAlertSecondButtonReturn) {
+                          [weakSelf setDefaultJSBundle];
+                        }
+                      };
+
+                      if (presentingWindow != nil) {
+                        [alert beginSheetModalForWindow:presentingWindow
+                                      completionHandler:^(NSModalResponse response) {
+                                        handleResponse(response);
+                                      }];
+                      } else {
+                        NSModalResponse response = [alert runModal];
+                        handleResponse(response);
+                      }
 #endif // macOS]
                     }]];
 
