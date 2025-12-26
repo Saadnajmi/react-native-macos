@@ -171,7 +171,7 @@ const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
 - (void)viewDidChangeEffectiveAppearance
 {
   [super viewDidChangeEffectiveAppearance];
-  
+
   [self invalidateLayer];
 }
 #endif // macOS]
@@ -335,7 +335,7 @@ const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
   if (oldViewProps.backfaceVisibility != newViewProps.backfaceVisibility) {
     self.layer.doubleSided = newViewProps.backfaceVisibility == BackfaceVisibility::Visible;
   }
-  
+
   // `cursor`
   if (oldViewProps.cursor != newViewProps.cursor) {
     needsInvalidateLayer = YES;
@@ -540,10 +540,12 @@ const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
     }
   }
 
+#if !TARGET_OS_OSX // [macOS]
   if (oldViewProps.accessibilityRespondsToUserInteraction != newViewProps.accessibilityRespondsToUserInteraction) {
     self.accessibilityElement.accessibilityRespondsToUserInteraction =
         newViewProps.accessibilityRespondsToUserInteraction;
   }
+#endif // [macOS]
 
   // `testId`
   if (oldViewProps.testId != newViewProps.testId) {
@@ -1099,7 +1101,7 @@ static RCTBorderStyle RCTBorderStyleFromOutlineStyle(OutlineStyle outlineStyle)
   } else {
     layer.shadowPath = nil;
   }
-  
+
 #if !TARGET_OS_OSX // [visionOS]
   // Stage 1.5. Cursor / Hover Effects
   if (@available(iOS 17.0, *)) {
@@ -1120,7 +1122,7 @@ static RCTBorderStyle RCTBorderStyleFromOutlineStyle(OutlineStyle outlineStyle)
       UIBezierPath *bezierPath = [UIBezierPath bezierPathWithCGPath:borderPath];
       CGPathRelease(borderPath);
       UIShape *shape = [UIShape shapeWithBezierPath:bezierPath];
-      
+
       hoverStyle = [UIHoverStyle styleWithEffect:[UIHoverAutomaticEffect effect] shape:shape];
     }
     [self setHoverStyle:hoverStyle];
@@ -1432,6 +1434,7 @@ static RCTBorderStyle RCTBorderStyleFromOutlineStyle(OutlineStyle outlineStyle)
   return self;
 }
 
+#if !TARGET_OS_OSX // [macOS
 - (NSArray<NSObject *> *)accessibilityElements
 {
   if ([_accessibilityOrderNativeIDs count] <= 0) {
@@ -1470,12 +1473,13 @@ static RCTBorderStyle RCTBorderStyleFromOutlineStyle(OutlineStyle outlineStyle)
 
   return _accessibilityElements;
 }
+#endif // macOS]
 
-+ (void)collectAccessibilityElements:(UIView *)view
-                      intoDictionary:(NSMutableDictionary<NSString *, UIView *> *)dict
++ (void)collectAccessibilityElements:(RCTUIView *)view // [macOS]
+                      intoDictionary:(NSMutableDictionary<NSString *, RCTUIView *> *)dict // [macOS]
                            nativeIds:(NSSet<NSString *> *)nativeIds
 {
-  for (UIView *subview in view.subviews) {
+  for (RCTUIView *subview in view.subviews) { // [macOS]
     if ([subview isKindOfClass:[RCTViewComponentView class]] &&
         [nativeIds containsObject:((RCTViewComponentView *)subview).nativeId]) {
       [dict setObject:subview forKey:((RCTViewComponentView *)subview).nativeId];
@@ -1728,7 +1732,7 @@ static NSString *RCTRecursiveAccessibilityLabel(RCTUIView *view) // [macOS]
     const auto borderMetrics = _props->resolveBorderMetrics(_layoutMetrics);
     const RCTCornerInsets cornerInsets =
         RCTGetCornerInsets(RCTCornerRadiiFromBorderRadii(borderMetrics.borderRadii), UIEdgeInsetsZero);
-    CGPathRef path = RCTPathCreateWithRoundedRect(self.bounds, cornerInsets, NULL);
+    CGPathRef path = RCTPathCreateWithRoundedRect(self.bounds, cornerInsets, NULL, NO); // [macOS]
 
     CGContextAddPath(context, path);
     CGContextFillPath(context);
@@ -1738,7 +1742,7 @@ static NSString *RCTRecursiveAccessibilityLabel(RCTUIView *view) // [macOS]
 
 
 #pragma mark - Focus Events
-  
+
 - (void)focus
 {
   [[self window] makeFirstResponder:self];
@@ -1749,9 +1753,9 @@ static NSString *RCTRecursiveAccessibilityLabel(RCTUIView *view) // [macOS]
   [[self window] resignFirstResponder];
 }
 
-- (BOOL)needsPanelToBecomeKey 
+- (BOOL)needsPanelToBecomeKey
 {
-	// We need to override this so that mouse clicks don't move keyboard focus on focusable views by default. 
+	// We need to override this so that mouse clicks don't move keyboard focus on focusable views by default.
 	return false;
 }
 
@@ -1765,11 +1769,11 @@ static NSString *RCTRecursiveAccessibilityLabel(RCTUIView *view) // [macOS]
   if (![super becomeFirstResponder]) {
     return NO;
   }
-  
+
   if (_eventEmitter) {
     _eventEmitter->onFocus();
   }
-  
+
   return YES;
 }
 
@@ -1778,11 +1782,11 @@ static NSString *RCTRecursiveAccessibilityLabel(RCTUIView *view) // [macOS]
   if (![super resignFirstResponder]) {
     return NO;
   }
-  
+
   if (_eventEmitter) {
     _eventEmitter->onBlur();
   }
-  
+
   return YES;
 }
 
@@ -1863,7 +1867,7 @@ enum DragEventType {
     BOOL isDir = NO;
     BOOL isValid = [[NSFileManager defaultManager] fileExistsAtPath:fileURL.path isDirectory:&isDir] && !isDir;
     if (isValid) {
-      
+
       NSString *MIMETypeString = nil;
       if (fileURL.pathExtension) {
         CFStringRef fileExtension = (__bridge CFStringRef)fileURL.pathExtension;
@@ -1908,17 +1912,17 @@ enum DragEventType {
       types.push_back(typeString);
     }
   }
-  
+
   NSPasteboardType imageType = [pasteboard availableTypeFromArray:@[NSPasteboardTypePNG, NSPasteboardTypeTIFF]];
   if (imageType && fileNames.count == 0) {
     NSString *MIMETypeString = imageType == NSPasteboardTypePNG ?[UTTypePNG preferredMIMEType] : [UTTypeTIFF preferredMIMEType];
     NSData *imageData = [pasteboard dataForType:imageType];
     NSImage *image = [[NSImage alloc] initWithData:imageData];
     CGImageRef cgImage = [image CGImageForProposedRect:nil context:nil hints:nil];
-    
+
     NSString *dataURLString = RCTDataURL(MIMETypeString, imageData).absoluteString;
     std::string typeString = MIMETypeString != nil ? [MIMETypeString UTF8String] : "";
-    
+
     DataTransferFile fileEntry = {
       .name = "",
       .type = typeString,
@@ -1943,10 +1947,10 @@ enum DragEventType {
   if (!_eventEmitter) {
     return;
   }
-  
+
   NSPoint locationInWindow = sender.draggingLocation;
   NSPasteboard *pasteboard = sender.draggingPasteboard;
-  
+
   DataTransfer dataTransfer = [self dataTransferForPasteboard:pasteboard];
 
   NSPoint locationInView = [self convertPoint:locationInWindow fromView:nil];
@@ -1965,16 +1969,16 @@ enum DragEventType {
     },
     .dataTransfer = dataTransfer,
   };
-  
+
   switch (eventType) {
     case DragEnter:
       _eventEmitter->onDragEnter(dragEvent);
       break;
-    
+
     case DragLeave:
       _eventEmitter->onDragLeave(dragEvent);
       break;
-    
+
     case Drop:
       _eventEmitter->onDrop(dragEvent);
       break;
@@ -2026,7 +2030,7 @@ enum MouseEventType {
 
   NSPoint locationInWindow = self.window.mouseLocationOutsideOfEventStream;
   NSPoint locationInView = [self convertPoint:locationInWindow fromView:nil];
-  
+
   NSEventModifierFlags modifierFlags = self.window.currentEvent.modifierFlags;
 
   MouseEvent mouseEvent = {
@@ -2039,7 +2043,7 @@ enum MouseEventType {
     .shiftKey = static_cast<bool>(modifierFlags & NSEventModifierFlagShift),
     .metaKey = static_cast<bool>(modifierFlags & NSEventModifierFlagCommand),
   };
-  
+
   switch (eventType) {
     case MouseEnter:
       _eventEmitter->onMouseEnter(mouseEvent);
@@ -2091,7 +2095,7 @@ enum MouseEventType {
   // both of which would not cause the mouseExited to be invoked.
 
   NSClipView *clipView = self.window ? self.enclosingScrollView.contentView : nil;
-  
+
   BOOL hasMouseEventHandler =
     _props->hostPlatformEvents[HostPlatformViewEvents::Offset::MouseEnter] ||
     _props->hostPlatformEvents[HostPlatformViewEvents::Offset::MouseLeave];

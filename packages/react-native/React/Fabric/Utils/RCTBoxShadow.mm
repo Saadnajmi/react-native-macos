@@ -65,7 +65,9 @@ static CALayer *initBoxShadowLayer(const BoxShadow &shadow, CGSize layerSize)
   // with the radius. This is an eyeballed adjustment that has the blur looking
   // more like the web.
   shadowLayer.shadowRadius = shadow.blurRadius / 2;
+#if !TARGET_OS_OSX // [macOS]
   shadowLayer.contentsScale = [UIScreen mainScreen].scale;
+#endif // [macOS]
 
   return shadowLayer;
 }
@@ -84,7 +86,9 @@ RCTGetOutsetBoxShadowLayer(const facebook::react::BoxShadow &shadow, RCTCornerRa
   shadowLayer.shadowPath = shadowRectPath;
 
   CAShapeLayer *mask = [CAShapeLayer new];
+#if !TARGET_OS_OSX // [macOS]
   [mask setContentsScale:[UIScreen mainScreen].scale];
+#endif // [macOS]
   CGMutablePathRef path = CGPathCreateMutable();
   CGPathRef layerPath =
       RCTPathCreateWithRoundedRect(shadowLayer.bounds, RCTGetCornerInsets(cornerRadii, UIEdgeInsetsZero), nil, NO);
