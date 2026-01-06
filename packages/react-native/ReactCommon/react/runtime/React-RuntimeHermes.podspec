@@ -27,7 +27,7 @@ Pod::Spec.new do |s|
   s.source                 = source
   s.source_files           = podspec_sources("hermes/*.{cpp,h}", "hermes/*.h")
   s.header_dir             = "react/runtime/hermes"
-  s.pod_target_xcconfig    = { "HEADER_SEARCH_PATHS" => "\"${PODS_TARGET_SRCROOT}/../..\" \"${PODS_TARGET_SRCROOT}/../../hermes/executor\"",
+  s.pod_target_xcconfig    = { "HEADER_SEARCH_PATHS" => "\"${PODS_TARGET_SRCROOT}/../..\" \"${PODS_TARGET_SRCROOT}/../../hermes/executor\" #{hermes_source_header_search_paths().map { |p| "\"#{p}\"" }.join(" ")}",
                                 "USE_HEADERMAP" => "YES",
                                 "CLANG_CXX_LANGUAGE_STANDARD" => rct_cxx_language_standard(),
                                 "GCC_WARN_PEDANTIC" => "YES" }

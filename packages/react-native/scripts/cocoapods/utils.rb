@@ -282,6 +282,15 @@ class ReactNativePodsUtils
                 wrapped_path = "\"#{path}\""
                 current_search_paths << wrapped_path
             }
+
+        # Add hermes source header paths for hermes-related dependencies
+        if ["hermes-engine", "React-hermes", "React-RuntimeHermes"].include?(dependency_name)
+            hermes_source_header_search_paths().each { |path|
+                wrapped_path = "\"#{path}\""
+                current_search_paths << wrapped_path unless current_search_paths.include?(wrapped_path)
+            }
+        end
+
         current_pod_target_xcconfig["HEADER_SEARCH_PATHS"] = current_search_paths.join(" ")
         spec.pod_target_xcconfig = current_pod_target_xcconfig
 

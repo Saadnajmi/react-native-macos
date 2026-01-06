@@ -6,8 +6,7 @@
 
 set -x -e
 
-hermesc_dir_path="$1"; shift
-jsi_path="$1"
+hermesc_dir_path="$1"
 
 # This script is supposed to be executed from Xcode "run script" phase.
 # Xcode sets up its build environment based on the build target (iphone, iphonesimulator, macosx).
@@ -15,10 +14,14 @@ jsi_path="$1"
 # So we clean the environment with env -i, and explicitly set SDKROOT to macosx
 SDKROOT=$(xcode-select -p)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
 
+# Note: We no longer pass -DJSI_DIR to CMake. The upstream Hermes repo now bundles
+# its own JSI headers at API/jsi/jsi/ (including hermes-interfaces.h). Passing an
+# external JSI path conflicts with these internal headers.
+
 env -i \
   PATH="$PATH" \
   SDKROOT="$SDKROOT" \
-  "$CMAKE_BINARY" -S "${PODS_ROOT}/hermes-engine" -B "$hermesc_dir_path" -DJSI_DIR="$jsi_path"
+  "$CMAKE_BINARY" -S "${PODS_ROOT}/hermes-engine" -B "$hermesc_dir_path"
 
 env -i \
   PATH="$PATH" \

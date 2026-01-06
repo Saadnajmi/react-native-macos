@@ -30,7 +30,7 @@ header_search_paths = [
 ].concat(use_hermes() ? [
   "$(PODS_ROOT)/Headers/Public/React-hermes",
   "$(PODS_ROOT)/Headers/Public/hermes-engine"
-] : [])
+].concat(hermes_source_header_search_paths()) : [])
 
 Pod::Spec.new do |s|
   s.name            = "React-RCTAppDelegate"

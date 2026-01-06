@@ -32,7 +32,7 @@ Pod::Spec.new do |s|
                               "inspector-modern/chrome/*.h"])
   s.public_header_files    = "executor/HermesExecutorFactory.h"
   s.pod_target_xcconfig    = {
-                               "HEADER_SEARCH_PATHS" => "\"${PODS_ROOT}/hermes-engine/destroot/include\" \"$(PODS_TARGET_SRCROOT)/..\"",
+                               "HEADER_SEARCH_PATHS" => "#{hermes_source_header_search_paths().map { |p| "\"#{p}\"" }.join(" ")} \"$(PODS_TARGET_SRCROOT)/..\"",
                                "CLANG_CXX_LANGUAGE_STANDARD" => rct_cxx_language_standard(),
                                "DEFINES_MODULE" => "YES",
                              }

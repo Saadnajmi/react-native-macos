@@ -88,35 +88,27 @@ Pod::Spec.new do |spec|
 
   elsif HermesEngineSourceType::isFromSource(source_type) then
 
-    spec.subspec 'Hermes' do |ss|
-      ss.source_files = ''
-      ss.public_header_files = 'API/hermes/*.h'
-      ss.header_dir = 'hermes'
-    end
-
-    spec.subspec 'cdp' do |ss|
-      ss.source_files = ''
-      ss.public_header_files = 'API/hermes/cdp/*.h'
-      ss.header_dir = 'hermes/cdp'
-    end
-
-    spec.subspec 'inspector' do |ss|
-      ss.source_files = ''
-      ss.public_header_files = 'API/hermes/inspector/*.h'
-      ss.header_dir = 'hermes/inspector'
-    end
-
-    spec.subspec 'inspector_chrome' do |ss|
-      ss.source_files = ''
-      ss.public_header_files = 'API/hermes/inspector/chrome/*.h'
-      ss.header_dir = 'hermes/inspector/chrome'
-    end
-
-    spec.subspec 'Public' do |ss|
-      ss.source_files = ''
-      ss.public_header_files = 'public/hermes/Public/*.h'
-      ss.header_dir = 'hermes/Public'
-    end
+    # Expose all public headers from the Hermes source tree
+    # Note: public/hermes/Public/*.h are accessed via HEADER_SEARCH_PATHS (not source_files)
+    # so that <hermes/Public/HermesExport.h> resolves correctly
+    spec.source_files = [
+      'API/hermes/**/*.h',
+      'API/jsi/jsi/*.h'
+    ]
+    spec.public_header_files = [
+      'API/hermes/**/*.h',
+      'API/jsi/jsi/*.h'
+    ]
+    spec.header_mappings_dir = 'API'
+    # Add header search paths for Hermes internal headers
+    # - $(PODS_TARGET_SRCROOT)/public/hermes: for <hermes/Public/*.h> includes
+    # - $(PODS_TARGET_SRCROOT)/API/jsi: for <jsi/*.h> includes
+    spec.pod_target_xcconfig = {
+      "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
+      "CLANG_CXX_LIBRARY" => "compiler-default",
+      "GCC_WARN_INHIBIT_ALL_WARNINGS" => "YES",
+      "HEADER_SEARCH_PATHS" => "$(PODS_TARGET_SRCROOT)/API $(PODS_TARGET_SRCROOT)/API/jsi $(PODS_TARGET_SRCROOT)/public"
+    }
 
     hermesc_path = "${PODS_ROOT}/hermes-engine/build_host_hermesc"
 
@@ -125,7 +117,8 @@ Pod::Spec.new do |spec|
     end
 
     spec.user_target_xcconfig = {
-      'HERMES_CLI_PATH' => "#{hermesc_path}/bin/hermesc"
+      'HERMES_CLI_PATH' => "#{hermesc_path}/bin/hermesc",
+      'HEADER_SEARCH_PATHS' => "$(PODS_ROOT)/hermes-engine/API/jsi $(PODS_ROOT)/hermes-engine/public"
     }
 
     spec.prepare_command = ". '#{react_native_path}/sdks/hermes-engine/utils/create-dummy-hermes-xcframework.sh'"
@@ -139,24 +132,24 @@ Pod::Spec.new do |spec|
         {
           :name => '[RN] [1] Build Hermesc',
           :output_files => [
-            "#{hermesc_path}/ImportHermesc.cmake"
+            "#{hermesc_path}/ImportHostCompilers.cmake"
           ],
           :script => <<-EOS
           . "${REACT_NATIVE_PATH}/scripts/xcode/with-environment.sh"
           export CMAKE_BINARY=${CMAKE_BINARY:-#{CMAKE_BINARY}}
-          . ${REACT_NATIVE_PATH}/sdks/hermes-engine/utils/build-hermesc-xcode.sh #{hermesc_path} ${REACT_NATIVE_PATH}/ReactCommon/jsi
+          . ${REACT_NATIVE_PATH}/sdks/hermes-engine/utils/build-hermesc-xcode.sh #{hermesc_path}
           EOS
         },
         {
           :name => '[RN] [2] Build Hermes',
-          :input_files => ["#{hermesc_path}/ImportHermesc.cmake"],
+          :input_files => ["#{hermesc_path}/ImportHostCompilers.cmake"],
           :output_files => [
-            "${PODS_ROOT}/hermes-engine/build/iphonesimulator/API/hermes/hermes.framework/hermes"
+            "${PODS_ROOT}/hermes-engine/build/iphonesimulator/lib/hermesvm.framework/hermesvm"
           ],
           :script => <<-EOS
           . "${REACT_NATIVE_PATH}/scripts/xcode/with-environment.sh"
           export CMAKE_BINARY=${CMAKE_BINARY:-#{CMAKE_BINARY}}
-          . ${REACT_NATIVE_PATH}/sdks/hermes-engine/utils/build-hermes-xcode.sh #{version} #{hermesc_path}/ImportHermesc.cmake ${REACT_NATIVE_PATH}/ReactCommon/jsi
+          . ${REACT_NATIVE_PATH}/sdks/hermes-engine/utils/build-hermes-xcode.sh #{version} #{hermesc_path}/ImportHostCompilers.cmake
           EOS
         }
       ]

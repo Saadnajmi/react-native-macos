@@ -33,6 +33,15 @@ def use_hermes_flags
   return "-DUSE_HERMES=1"
 end
 
+# Returns the header search paths needed for hermes-engine when building from source
+def hermes_source_header_search_paths
+  return [
+    "$(PODS_ROOT)/hermes-engine/destroot/include",
+    "$(PODS_ROOT)/hermes-engine/API/jsi",
+    "$(PODS_ROOT)/hermes-engine/public"
+  ]
+end
+
 def use_third_party_jsc_flags
   return "-DUSE_THIRD_PARTY_JSC=1"
 end

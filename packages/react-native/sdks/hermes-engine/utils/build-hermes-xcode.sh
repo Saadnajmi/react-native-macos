@@ -8,7 +8,6 @@ set -x -e
 
 release_version="$1"; shift
 hermesc_path="$1"; shift
-jsi_path="$1"; shift
 
 # Based on platform name returns the framework copy destination. Used later by `vendored_frameworks` in Podspec.
 # Fallbacks to "ios" if platform is not recognized.
@@ -80,8 +79,7 @@ echo "Configure Apple framework"
   -DHERMES_BUILD_SHARED_JSI:BOOLEAN=false \
   -DCMAKE_CXX_FLAGS:STRING="-gdwarf" \
   -DCMAKE_C_FLAGS:STRING="-gdwarf" \
-  -DIMPORT_HERMESC:PATH="${hermesc_path}" \
-  -DJSI_DIR="$jsi_path" \
+  -DIMPORT_HOST_COMPILERS:PATH="${hermesc_path}" \
   -DHERMES_RELEASE_VERSION="for RN $release_version" \
   -DCMAKE_BUILD_TYPE="$cmake_build_type"
 
@@ -89,13 +87,21 @@ echo "Build Apple framework"
 
 "$CMAKE_BINARY" \
   --build "${PODS_ROOT}/hermes-engine/build/${PLATFORM_NAME}" \
-  --target libhermes \
+  --target hermesvm \
   -j "$(sysctl -n hw.ncpu)"
 
 echo "Copy Apple framework to destroot/Library/Frameworks"
 
 platform_copy_destination=$(get_platform_copy_destination $PLATFORM_NAME)
 
+# Remove the old framework to avoid stale files
+rm -rf "${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/${platform_copy_destination}/hermes.framework"
+
+# Copy the new framework
 cp -pfR \
-  "${PODS_ROOT}/hermes-engine/build/${PLATFORM_NAME}/API/hermes/hermes.framework" \
-  "${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/${platform_copy_destination}"
+  "${PODS_ROOT}/hermes-engine/build/${PLATFORM_NAME}/lib/hermesvm.framework" \
+  "${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/${platform_copy_destination}/hermes.framework"
+
+# Rename the binary from hermesvm to hermes for compatibility
+mv "${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/${platform_copy_destination}/hermes.framework/hermesvm" \
+   "${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/${platform_copy_destination}/hermes.framework/hermes"
