@@ -1,0 +1,77 @@
+name: Build SPM
+
+on:
+  workflow_call:
+
+jobs:
+  build-hermes:
+    name: "Build Hermes"
+    runs-on: macos-15
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          fetch-depth: 0
+
+      - name: Set up Xcode
+        run: sudo xcode-select --switch /Applications/Xcode.app
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+          cache: yarn
+          registry-url: https://registry.npmjs.org
+
+      - name: Install npm dependencies
+        run: yarn install
+
+      - name: Build Hermes from source
+        working-directory: packages/react-native
+        run: node scripts/ios-prebuild.js -s -f Debug
+
+      - name: Upload Hermes artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-artifacts
+          path: packages/react-native/.build/artifacts/hermes
+          retention-days: 1
+
+  build-spm:
+    name: "${{ matrix.platform }}"
+    needs: build-hermes
+    runs-on: macos-26
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ios, macos, visionos]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          fetch-depth: 0
+
+      - name: Setup toolchain
+        uses: ./.github/actions/microsoft-setup-toolchain
+        with:
+          node-version: '22'
+          platform: ${{ matrix.platform }}
+
+      - name: Install npm dependencies
+        run: yarn install
+
+      - name: Download Hermes artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: hermes-artifacts
+          path: packages/react-native/.build/artifacts/hermes
+
+      - name: Setup SPM workspace (using prebuilt Hermes)
+        working-directory: packages/react-native
+        run: node scripts/ios-prebuild.js -s -f Debug
+
+      - name: Build SPM (${{ matrix.platform }})
+        working-directory: packages/react-native
+        run: node scripts/ios-prebuild.js -b -f Debug -p ${{ matrix.platform }}
