@@ -53,7 +53,7 @@ function build_framework {
 # group the frameworks together to create a universal framework
 function build_universal_framework {
     if [ ! -d destroot/Library/Frameworks/universal/hermes.xcframework ]; then
-        create_universal_framework "iphoneos" "iphonesimulator" "catalyst" "xros" "xrsimulator" "appletvos" "appletvsimulator"
+        create_universal_framework "macosx" "iphoneos" "iphonesimulator" "catalyst" "xros" "xrsimulator" "appletvos" "appletvsimulator"
     else
         echo "Skipping; Clean \"destroot\" to rebuild".
     fi
