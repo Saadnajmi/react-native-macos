@@ -246,7 +246,7 @@ let reactJsErrorHandler = RNTarget(
 let reactGraphicsApple = RNTarget(
   name: .reactGraphicsApple,
   path: "ReactCommon/react/renderer/graphics/platform/ios",
-  linkedFrameworks: ["UIKit", "CoreGraphics"],
+  linkedFrameworks: ["CoreGraphics"],
   dependencies: [.reactDebug, .jsi, .reactUtils, .reactNativeDependencies]
 )
 
@@ -360,8 +360,8 @@ let reactCore = RNTarget(
     "ReactCommon/react/runtime/platform/ios", // explicit header search path to break circular dependency. RCTHost imports `RCTDefines.h` in ReactCore, ReacCore needs to import RCTHost
   ],
   linkedFrameworks: ["CoreServices"],
-  excludedPaths: ["Fabric", "Tests", "Resources", "Runtime/RCTJscInstanceFactory.mm", "I18n/strings", "CxxBridge/JSCExecutorFactory.mm", "CoreModules"],
-  dependencies: [.reactNativeDependencies, .reactCxxReact, .reactPerfLogger, .jsi, .reactJsiExecutor, .reactUtils, .reactFeatureFlags, .reactRuntimeScheduler, .yoga, .reactJsInspector, .reactJsiTooling, .rctDeprecation, .reactCoreRCTWebsocket, .reactRCTImage, .reactTurboModuleCore, .reactRCTText, .reactRCTBlob, .reactRCTAnimation, .reactRCTNetwork, .reactFabric, .hermesPrebuilt],
+  excludedPaths: ["Fabric", "Tests", "Resources", "Runtime/RCTJscInstanceFactory.mm", "I18n/strings", "CxxBridge/JSCExecutorFactory.mm", "CoreModules", "RCTUIKit"],
+  dependencies: [.reactNativeDependencies, .reactCxxReact, .reactPerfLogger, .jsi, .reactJsiExecutor, .reactUtils, .reactFeatureFlags, .reactRuntimeScheduler, .yoga, .reactJsInspector, .reactJsiTooling, .rctDeprecation, .reactCoreRCTWebsocket, .reactRCTImage, .reactTurboModuleCore, .reactRCTText, .reactRCTBlob, .reactRCTAnimation, .reactRCTNetwork, .reactFabric, .hermesPrebuilt, .reactRCTUIKit],
   sources: [".", "Runtime/RCTHermesInstanceFactory.mm"]
 )
 
@@ -376,7 +376,6 @@ let reactFabric = RNTarget(
     "components/view/tests",
     "components/view/platform/android",
     "components/view/platform/windows",
-    "components/view/platform/macos",
     "components/scrollview/tests",
     "components/scrollview/platform/android",
     "mounting/tests",
@@ -420,16 +419,13 @@ let reactFabricComponents = RNTarget(
     "components/modal/platform/cxx",
     "components/view/platform/android",
     "components/view/platform/windows",
-    "components/view/platform/macos",
     "components/textinput/platform/android",
     "components/text/platform/android",
-    "components/textinput/platform/macos",
     "components/text/tests",
     "textlayoutmanager/tests",
     "textlayoutmanager/platform/android",
     "textlayoutmanager/platform/cxx",
     "textlayoutmanager/platform/windows",
-    "textlayoutmanager/platform/macos",
     "conponents/rncore", // this was the old folder where RN Core Components were generated. If you ran codegen in the past, you might have some files in it that might make the build fail.
   ],
   dependencies: [.reactNativeDependencies, .reactCore, .reactJsiExecutor, .reactTurboModuleCore, .jsi, .logger, .reactDebug, .reactFeatureFlags, .reactUtils, .reactRuntimeScheduler, .reactCxxReact, .yoga, .reactRendererDebug, .reactGraphics, .reactFabric, .reactTurboModuleBridging],
@@ -524,6 +520,16 @@ let reactSettings = RNTarget(
   dependencies: [.reactTurboModuleCore, .yoga]
 )
 
+// [macOS
+/// React-RCTUIKit.podspec
+/// UIKit/AppKit compatibility layer for React Native macOS.
+let reactRCTUIKit = RNTarget(
+  name: .reactRCTUIKit,
+  path: "React/RCTUIKit",
+  excludedPaths: ["README.md"]
+)
+// macOS]
+
 // MARK: Target list
 let targets = [
   reactDebug,
@@ -581,13 +587,14 @@ let targets = [
   reactAppDelegate,
   reactSettings,
   reactRuntimeExecutor,
+  reactRCTUIKit, // [macOS]
 ]
 
 // MARK: Package object
 
 let package = Package(
   name: react,
-  platforms: [.iOS(.v15), .macCatalyst(SupportedPlatform.MacCatalystVersion.v13)],
+  platforms: [.iOS(.v15), .macOS(.v14), .macCatalyst(SupportedPlatform.MacCatalystVersion.v13)],
   products: [
     .library(
       name: react,
@@ -753,6 +760,7 @@ extension String {
   static let reactNativeModuleDom = "React-domnativemodule"
   static let reactAppDelegate = "React-RCTAppDelegate"
   static let reactSettings = "React-RCTSettings"
+  static let reactRCTUIKit = "React-RCTUIKit" // [macOS]
 }
 
 func relativeSearchPath(_ depth: Int, _ path: String) -> String {
@@ -792,6 +800,14 @@ extension Target {
         .define("USE_HERMES", to: "1"),
       ] + defines + cxxCommonHeaderPaths
 
+    // [macOS] Platform-specific framework linking for targets that need UIKit (iOS/visionOS) vs AppKit (macOS)
+    var conditionalLinkerSettings: [LinkerSetting] = linkerSettings
+    if name == "React-graphics-Apple" || name == "React-RCTUIKit" {
+      conditionalLinkerSettings.append(.linkedFramework("UIKit", .when(platforms: [.iOS, .visionOS])))
+      conditionalLinkerSettings.append(.linkedFramework("AppKit", .when(platforms: [.macOS])))
+    }
+    // macOS]
+
     return .target(
       name: name,
       dependencies: dependencies,
@@ -800,7 +816,7 @@ extension Target {
       sources: sources,
       publicHeadersPath: publicHeadersPath,
       cxxSettings: cxxSettings,
-      linkerSettings: linkerSettings
+      linkerSettings: conditionalLinkerSettings
     )
   }
 }
