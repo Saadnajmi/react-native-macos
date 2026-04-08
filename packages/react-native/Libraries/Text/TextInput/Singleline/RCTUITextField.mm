@@ -17,12 +17,7 @@
 
 #if TARGET_OS_OSX // [macOS
 
-#if RCT_SUBCLASS_SECURETEXTFIELD
-#define RCTUITextFieldCell RCTUISecureTextFieldCell
-@interface RCTUISecureTextFieldCell : NSSecureTextFieldCell
-#else
 @interface RCTUITextFieldCell : NSTextFieldCell
-#endif
 
 @property (nonatomic, assign) UIEdgeInsets textContainerInset;
 @property (nonatomic, getter=isAutomaticTextReplacementEnabled) BOOL automaticTextReplacementEnabled;
@@ -86,11 +81,7 @@
 @end
 #endif // macOS]
 
-#ifdef RCT_SUBCLASS_SECURETEXTFIELD
-@implementation RCTUISecureTextField {
-#else
 @implementation RCTUITextField {
-#endif
   RCTBackedTextFieldDelegateAdapter *_textInputDelegateAdapter;
   NSDictionary<NSAttributedStringKey, id> *_defaultTextAttributes;
 #if !TARGET_OS_OSX // [macOS]
