@@ -1,0 +1,33 @@
+# Example BUILD.bazel for a JS package (packages/dev-middleware)
+# This demonstrates the intended Bazel integration pattern for JS packages.
+# 
+# Note: This is a template showing the planned structure when rules_js is integrated.
+# Currently, yarn run scripts are still the primary build mechanism.
+
+# When rules_js is integrated, this will replace yarn build scripts
+# Example usage:
+# load("@aspect_rules_js//js:defs.bzl", "js_library", "js_test")
+# 
+# js_library(
+#     name = "dev-middleware",
+#     srcs = glob(
+#         ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.json"],
+#         exclude = [
+#             "node_modules/**",
+#             "dist/**",
+#             "build/**",
+#             "*.test.*",
+#         ],
+#     ),
+#     entry_point = "src/index.ts",
+#     deps = [
+#         "//packages/react-native",
+#     ],
+# )
+#
+# js_test(
+#     name = "test",
+#     srcs = glob(["**/*.test.ts"]),
+#     data = [":dev-middleware"],
+#     entry_point = "jest.config.js",
+# )

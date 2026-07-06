@@ -1,0 +1,4 @@
+workspace(name = "react_native_macos")
+
+# Bazel minimum version requirement for this workspace
+# Requires >= 6.0 for full pnpm support and apple_shared_library

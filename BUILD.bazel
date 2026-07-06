@@ -1,0 +1,11 @@
+# Root BUILD file for react-native-macos
+# Defines workspace-wide rules and exports
+
+package(default_visibility = ["//visibility:public"])
+
+# Exports for use in sub-packages
+exports_files([
+    "package.json",
+    "yarn.lock",
+    ".yarnrc.yml",
+])
