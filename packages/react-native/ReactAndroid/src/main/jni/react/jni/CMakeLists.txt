@@ -31,13 +31,14 @@ add_library(
           OnLoad-common.cpp
           ReadableNativeArray.cpp
           ReadableNativeMap.cpp
+          TransformHelper.cpp
           WritableNativeArray.cpp
           WritableNativeMap.cpp
 )
 target_merge_so(reactnativejni_common)
 target_include_directories(reactnativejni_common PUBLIC ../../)
 
-target_link_libraries(reactnativejni_common fbjni folly_runtime react_cxxreact)
+target_link_libraries(reactnativejni_common fbjni folly_runtime react_cxxreact rrc_view)
 target_compile_reactnative_options(reactnativejni_common PRIVATE)
 target_compile_options(reactnativejni_common PRIVATE -Wno-unused-lambda-capture)
 
@@ -53,9 +54,7 @@ add_library(
           CatalystInstanceImpl.cpp
           InspectorNetworkRequestListener.cpp
           JExecutor.cpp
-          JInspector.cpp
           JMessageQueueThread.cpp
-          JReactCxxErrorHandler.cpp
           JReactSoftExceptionLogger.cpp
           JRuntimeExecutor.cpp
           JRuntimeScheduler.cpp
@@ -66,8 +65,7 @@ add_library(
           MethodInvoker.cpp
           ModuleRegistryBuilder.cpp
           OnLoad.cpp
-          ReactInstanceManagerInspectorTarget.cpp
-          SafeReleaseJniRef.cpp
+        SafeReleaseJniRef.cpp
 )
 target_merge_so(reactnativejni)
 

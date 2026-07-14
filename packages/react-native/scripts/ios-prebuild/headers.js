@@ -9,8 +9,8 @@
  */
 
 const fs = require('fs');
-const glob = require('glob');
 const path = require('path');
+const {globSync} = require('tinyglobby');
 
 /**
  * This regular expression is designed to match function calls to `podspec_sources` within a podspec file.
@@ -32,9 +32,10 @@ function getHeaderFilesFromPodspecs(
   rootFolder /*:string*/,
 ) /*: { [key: string]: string[] }*/ {
   // Find podspec files
-  const podSpecFiles = glob.sync('**/*.podspec', {
+  const podSpecFiles = globSync('**/*.podspec', {
     cwd: rootFolder,
     absolute: true,
+    onlyFiles: true,
   });
 
   const headers /*: { [key: string]: string[] }*/ = {};
@@ -49,7 +50,7 @@ function getHeaderFilesFromPodspecs(
         let arg2 = match[2]?.trim().replace(/['"]/g, '');
         if (!arg2) {
           // Skip
-          return;
+          continue;
         }
         // Check if arg2 is an array (e.g., ['a', 'b'])
         if (arg2.startsWith('[') && arg2.endsWith(']')) {
@@ -66,9 +67,10 @@ function getHeaderFilesFromPodspecs(
         const p = path.resolve(process.cwd(), path.dirname(podspec));
         const results = globPatterns
           .map(g => {
-            return glob.sync(g.replace('{h}', 'h'), {
+            return globSync(g.replace('{h}', 'h'), {
               cwd: p,
               absolute: true,
+              expandDirectories: false,
             });
           })
           .flat();

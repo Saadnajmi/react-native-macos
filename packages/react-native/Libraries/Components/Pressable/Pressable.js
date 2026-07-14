@@ -90,41 +90,47 @@ type PressableBaseProps = $ReadOnly<{
   /**
    * Called when this view's layout changes.
    */
-  onLayout?: ?(event: LayoutChangeEvent) => mixed,
+  onLayout?: ?(event: LayoutChangeEvent) => unknown,
 
   /**
    * Called when the hover is activated to provide visual feedback.
    */
-  onHoverIn?: ?(event: MouseEvent) => mixed,
+  onHoverIn?: ?(event: MouseEvent) => unknown,
 
   /**
    * Called when the hover is deactivated to undo visual feedback.
    */
-  onHoverOut?: ?(event: MouseEvent) => mixed,
+  onHoverOut?: ?(event: MouseEvent) => unknown,
 
   /**
    * Called when a long-tap gesture is detected.
    */
-  onLongPress?: ?(event: GestureResponderEvent) => mixed,
+  onLongPress?: ?(event: GestureResponderEvent) => unknown,
 
   /**
    * Called when a single tap gesture is detected.
    */
-  onPress?: ?(event: GestureResponderEvent) => mixed,
+  onPress?: ?(event: GestureResponderEvent) => unknown,
 
   /**
    * Called when a touch is engaged before `onPress`.
    */
-  onPressIn?: ?(event: GestureResponderEvent) => mixed,
+  onPressIn?: ?(event: GestureResponderEvent) => unknown,
   /**
    * Called when the press location moves.
    */
-  onPressMove?: ?(event: GestureResponderEvent) => mixed,
+  onPressMove?: ?(event: GestureResponderEvent) => unknown,
 
   /**
    * Called when a touch is released before `onPress`.
    */
-  onPressOut?: ?(event: GestureResponderEvent) => mixed,
+  onPressOut?: ?(event: GestureResponderEvent) => unknown,
+
+  /**
+   * Whether to prevent any other native components from becoming responder
+   * while this pressable is responder.
+   */
+  blockNativeResponder?: ?boolean,
 
   // [macOS
   /**
@@ -301,6 +307,7 @@ function Pressable({
     'aria-expanded': ariaExpanded,
     'aria-label': ariaLabel,
     'aria-selected': ariaSelected,
+    blockNativeResponder,
     cancelable,
     children,
     delayHoverIn,
@@ -362,7 +369,7 @@ function Pressable({
   };
 
   const accessibilityLiveRegion =
-    ariaLive === 'off' ? 'none' : ariaLive ?? props.accessibilityLiveRegion;
+    ariaLive === 'off' ? 'none' : (ariaLive ?? props.accessibilityLiveRegion);
 
   const accessibilityLabel = ariaLabel ?? props.accessibilityLabel;
 
@@ -434,6 +441,7 @@ function Pressable({
           onPressOut(event);
         }
       },
+      blockNativeResponder,
       // [macOS
       onKeyDown,
       onKeyUp,
@@ -442,6 +450,7 @@ function Pressable({
     [
       android_disableSound,
       android_rippleConfig,
+      blockNativeResponder,
       cancelable,
       delayHoverIn,
       delayHoverOut,

@@ -501,6 +501,7 @@ RCT_ENUM_CONVERTER(
     UIUserInterfaceStyleUnspecified,
     integerValue)
 
+#if !TARGET_OS_TV
 RCT_ENUM_CONVERTER(
     UIInterfaceOrientationMask,
     (@{
@@ -512,6 +513,7 @@ RCT_ENUM_CONVERTER(
     }),
     NSNotFound,
     unsignedIntegerValue)
+#endif
 
 RCT_ENUM_CONVERTER(
     UIModalPresentationStyle,
@@ -999,7 +1001,7 @@ static RCTPlatformColor *RCTColorFromSemanticColorName(NSString *semanticColorNa
     RCTAssert ([RCTPlatformColor respondsToSelector:selector], @"RCTPlatformColor does not respond to a semantic color selector.");
     Class klass = [RCTPlatformColor class];
     IMP imp = [klass methodForSelector:selector];
-    id (*getSemanticColorObject)(id, SEL) = (id(*)(id, SEL))imp;
+    id (*getSemanticColorObject)(id, SEL) = (id (*)(id, SEL))imp;
     id colorObject = getSemanticColorObject(klass, selector);
     if ([colorObject isKindOfClass:[RCTPlatformColor class]]) {
       color = colorObject;
@@ -1282,7 +1284,7 @@ NSArray *RCTConvertArrayValue(SEL type, id json)
   __block BOOL copy = NO;
   __block NSArray *values = json = [RCTConvert NSArray:json];
   [json enumerateObjectsUsingBlock:^(id jsonValue, NSUInteger idx, __unused BOOL *stop) {
-    id value = ((id(*)(Class, SEL, id))objc_msgSend)([RCTConvert class], type, jsonValue);
+    id value = ((id (*)(Class, SEL, id))objc_msgSend)([RCTConvert class], type, jsonValue);
     if (copy) {
       if (value) {
         [(NSMutableArray *)values addObject:value];

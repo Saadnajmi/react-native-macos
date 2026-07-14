@@ -53,18 +53,23 @@ public class ModuleHolder {
 
   public constructor(nativeModule: NativeModule) {
     name = nativeModule.name
+    @Suppress("DEPRECATION")
     reactModuleInfo =
         ReactModuleInfo(
             nativeModule.name,
             nativeModule.javaClass.simpleName,
             nativeModule.canOverrideExistingModule(),
             true,
-            CxxModuleWrapper::class.java.isAssignableFrom(nativeModule.javaClass),
-            ReactModuleInfo.classIsTurboModule(nativeModule.javaClass))
+            false,
+            ReactModuleInfo.classIsTurboModule(nativeModule.javaClass),
+        )
 
     internalModule = nativeModule
     PrinterHolder.printer.logMessage(
-        ReactDebugOverlayTags.NATIVE_MODULE, "NativeModule init: %s", name)
+        ReactDebugOverlayTags.NATIVE_MODULE,
+        "NativeModule init: %s",
+        name,
+    )
   }
 
   /*
@@ -103,7 +108,7 @@ public class ModuleHolder {
     get() = reactModuleInfo.isTurboModule
 
   public val isCxxModule: Boolean
-    get() = reactModuleInfo.isCxxModule
+    get() = false
 
   public val className: String
     get() = reactModuleInfo.className
@@ -161,7 +166,10 @@ public class ModuleHolder {
         .arg("name", name)
         .flush()
     PrinterHolder.printer.logMessage(
-        ReactDebugOverlayTags.NATIVE_MODULE, "NativeModule init: %s", name)
+        ReactDebugOverlayTags.NATIVE_MODULE,
+        "NativeModule init: %s",
+        name,
+    )
     val module: NativeModule
     try {
       module = checkNotNull(provider).get()

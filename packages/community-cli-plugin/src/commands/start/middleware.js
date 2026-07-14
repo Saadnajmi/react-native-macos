@@ -22,7 +22,10 @@ type MiddlewareReturn = {
   },
   messageSocketEndpoint: {
     server: ws$WebSocketServer,
-    broadcast: (method: string, params?: Record<string, mixed> | null) => void,
+    broadcast: (
+      method: string,
+      params?: Record<string, unknown> | null,
+    ) => void,
   },
   eventsSocketEndpoint: {
     server: ws$WebSocketServer,
@@ -31,9 +34,9 @@ type MiddlewareReturn = {
   ...
 };
 
-// $FlowFixMe
+// $FlowFixMe[incompatible-type]
 const unusedStubWSServer: ws$WebSocketServer = {};
-// $FlowFixMe
+// $FlowFixMe[incompatible-type]
 const unusedMiddlewareStub: Server = {};
 
 const communityMiddlewareFallback = {
@@ -54,7 +57,7 @@ const communityMiddlewareFallback = {
       server: unusedStubWSServer,
       broadcast: (
         method: string,
-        _params?: Record<string, mixed> | null,
+        _params?: Record<string, unknown> | null,
       ): void => {},
     },
     eventsSocketEndpoint: {
@@ -80,7 +83,7 @@ try {
     '@react-native-community/cli-server-api',
     {paths: [communityCliPath]},
   );
-  // $FlowIgnore[unsupported-syntax] dynamic import
+  // $FlowFixMe[unsupported-syntax] dynamic import
   communityMiddlewareFallback.createDevServerMiddleware = require(
     communityCliServerApiPath,
   ).createDevServerMiddleware as CreateDevServerMiddleware;
