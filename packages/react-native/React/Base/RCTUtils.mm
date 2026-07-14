@@ -451,7 +451,7 @@ CGSize RCTSwitchSize(void)
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     RCTUnsafeExecuteOnMainQueueSync(^{
-      rctSwitchSize = [UISwitch new].intrinsicContentSize;
+      rctSwitchSize = [RCTUISwitch new].intrinsicContentSize; // [macOS]
     });
   });
   return rctSwitchSize;
@@ -684,8 +684,8 @@ RCTPlatformWindow *__nullable RCTKeyWindow(void) // [macOS]
 #endif // macOS]
 }
 
-#if !TARGET_OS_TV
 #if !TARGET_OS_OSX // [macOS]
+#if !TARGET_OS_TV
 UIStatusBarManager *__nullable RCTUIStatusBarManager(void)
 {
   return RCTKeyWindow().windowScene.statusBarManager;

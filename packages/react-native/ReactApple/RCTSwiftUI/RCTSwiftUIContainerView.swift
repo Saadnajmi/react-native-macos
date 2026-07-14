@@ -6,21 +6,51 @@
  */
 
 import SwiftUI
+#if os(macOS)
+import AppKit
+#else
 import UIKit
+#endif
 
 @MainActor @objc public class RCTSwiftUIContainerView: NSObject {
   private var containerViewModel = ContainerViewModel()
+#if os(macOS)
+  private var hostingController: NSHostingController<SwiftUIContainerView>?
+#else
   private var hostingController: UIHostingController<SwiftUIContainerView>?
+#endif
 
   @objc public override init() {
     super.init()
+#if os(macOS)
+    hostingController = NSHostingController(rootView: SwiftUIContainerView(viewModel: containerViewModel))
+#else
     hostingController = UIHostingController(rootView: SwiftUIContainerView(viewModel: containerViewModel))
+#endif
     guard let view = hostingController?.view else {
       return
     }
+#if os(macOS)
+    view.wantsLayer = true
+    view.layer?.backgroundColor = NSColor.clear.cgColor
+#else
     view.backgroundColor = .clear
+#endif
   }
 
+#if os(macOS)
+  @objc public func updateContentView(_ view: NSView) {
+    containerViewModel.contentView = view
+  }
+
+  @objc public func hostingView() -> NSView? {
+    return hostingController?.view
+  }
+
+  @objc public func contentView() -> NSView? {
+    return containerViewModel.contentView
+  }
+#else
   @objc public func updateContentView(_ view: UIView) {
     containerViewModel.contentView = view
   }
@@ -32,6 +62,7 @@ import UIKit
   @objc public func contentView() -> UIView? {
     return containerViewModel.contentView
   }
+#endif
 
   @objc public func updateBlurRadius(_ radius: NSNumber) {
     let blurRadius = CGFloat(radius.floatValue)
@@ -42,12 +73,21 @@ import UIKit
     containerViewModel.grayscale = CGFloat(grayscale.floatValue)
   }
 
+#if os(macOS)
+  @objc public func updateDropShadow(standardDeviation: NSNumber, x: NSNumber, y: NSNumber, color: NSColor) {
+    containerViewModel.shadowRadius = CGFloat(standardDeviation.floatValue)
+    containerViewModel.shadowX = CGFloat(x.floatValue)
+    containerViewModel.shadowY = CGFloat(y.floatValue)
+    containerViewModel.shadowColor = Color(nsColor: color)
+  }
+#else
   @objc public func updateDropShadow(standardDeviation: NSNumber, x: NSNumber, y: NSNumber, color: UIColor) {
     containerViewModel.shadowRadius = CGFloat(standardDeviation.floatValue)
     containerViewModel.shadowX = CGFloat(x.floatValue)
     containerViewModel.shadowY = CGFloat(y.floatValue)
     containerViewModel.shadowColor = Color(color)
   }
+#endif
 
   @objc public func updateSaturation(_ saturation: NSNumber) {
     containerViewModel.saturationAmount = CGFloat(saturation.floatValue)
@@ -101,7 +141,11 @@ class ContainerViewModel: ObservableObject {
   // hue-rotate filter properties
   @Published var hueRotationDegrees: CGFloat = 0
 
+#if os(macOS)
+  @Published var contentView: NSView?
+#else
   @Published var contentView: UIView?
+#endif
 }
 
 struct SwiftUIContainerView: View {
@@ -109,7 +153,12 @@ struct SwiftUIContainerView: View {
 
   var body: some View {
     if let contentView = viewModel.contentView {
-      UIViewWrapper(view: contentView)
+#if os(macOS)
+      let wrappedView = AnyView(NSViewWrapper(view: contentView))
+#else
+      let wrappedView = AnyView(UIViewWrapper(view: contentView))
+#endif
+      wrappedView
         .blur(radius: viewModel.blurRadius)
         .grayscale(viewModel.grayscale)
         .shadow(color: viewModel.shadowColor, radius: viewModel.shadowRadius, x: viewModel.shadowX, y: viewModel.shadowY)
@@ -120,6 +169,18 @@ struct SwiftUIContainerView: View {
   }
 }
 
+#if os(macOS)
+struct NSViewWrapper: NSViewRepresentable {
+  let view: NSView
+
+  func makeNSView(context: Context) -> NSView {
+    return view
+  }
+
+  func updateNSView(_ nsView: NSView, context: Context) {
+  }
+}
+#else
 struct UIViewWrapper: UIViewRepresentable {
   let view: UIView
 
@@ -130,3 +191,4 @@ struct UIViewWrapper: UIViewRepresentable {
   func updateUIView(_ uiView: UIView, context: Context) {
   }
 }
+#endif

@@ -6,21 +6,24 @@
  */
 
 #import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
+#import <React/RCTUIKit.h> // [macOS]
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface RCTSwiftUIContainerViewWrapper : NSObject
 
-- (UIView *_Nullable)contentView;
+- (RCTPlatformView *_Nullable)contentView; // [macOS]
 - (void)updateBlurRadius:(NSNumber *)radius;
 - (void)updateGrayscale:(NSNumber *)grayscale;
-- (void)updateDropShadow:(NSNumber *)standardDeviation x:(NSNumber *)x y:(NSNumber *)y color:(UIColor *)color;
+- (void)updateDropShadow:(NSNumber *)standardDeviation
+                       x:(NSNumber *)x
+                       y:(NSNumber *)y
+                   color:(RCTPlatformColor *)color; // [macOS]
 - (void)updateSaturation:(NSNumber *)saturation;
 - (void)updateContrast:(NSNumber *)contrast;
 - (void)updateHueRotate:(NSNumber *)degrees;
-- (void)updateContentView:(UIView *)view;
-- (UIView *_Nullable)hostingView;
+- (void)updateContentView:(RCTPlatformView *)view; // [macOS]
+- (RCTPlatformView *_Nullable)hostingView; // [macOS]
 - (void)resetStyles;
 - (void)updateLayoutWithBounds:(CGRect)bounds;
 

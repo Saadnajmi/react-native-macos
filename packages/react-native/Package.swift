@@ -81,7 +81,7 @@ let rctSwiftUI = RNTarget(
 let rctSwiftUIWrapper = RNTarget(
   name: .rctSwiftUIWrapper,
   path: "ReactApple/RCTSwiftUIWrapper",
-  dependencies: [.rctSwiftUI]
+  dependencies: [.rctSwiftUI, .reactRCTUIKit] // [macOS]
 )
 
 // React-rendererconsistency.podspec
