@@ -13,7 +13,7 @@ const {
   hermesCommitAtMergeBase,
 } = require('./microsoft-hermes'); // [macOS]
 const {computeNightlyTarballURL, createLogger} = require('./utils');
-const {execFileSync, execSync} = require('child_process');
+const {execFileSync} = require('child_process');
 const fs = require('fs');
 const os = require('os'); // [macOS]
 const path = require('path');
@@ -158,6 +158,7 @@ type HermesEngineSourceType =
 */
 
 const HermesEngineSourceTypes /*:{
+  +BUILD_FROM_HERMES_COMMIT: "build_from_hermes_commit",
   +DOWNLOAD_PREBUILD_TARBALL: "download_prebuild_tarball",
   +DOWNLOAD_PREBUILT_NIGHTLY_TARBALL: "download_prebuilt_nightly_tarball",
   +LOCAL_PREBUILT_TARBALL: "local_prebuilt_tarball"
@@ -440,22 +441,35 @@ async function buildFromHermesCommit(
   const HERMES_GITHUB_URL = 'https://github.com/facebook/hermes.git';
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hermes-build-'));
   const hermesDir = path.join(tmpDir, 'hermes');
-  const inheritStdio = {stdio: 'inherit'};
+  const inheritStdio /*: child_process$execFileSyncOpts */ = {
+    stdio: 'inherit',
+  };
 
   try {
     // Clone Hermes at the identified commit using the most efficient
     // single-fetch pattern (see https://github.com/actions/checkout)
     hermesLog(`Cloning Hermes at commit ${commit}...`);
-    execSync(`git init "${hermesDir}"`, inheritStdio);
-    execSync(
-      `git -C "${hermesDir}" remote add origin ${HERMES_GITHUB_URL}`,
+    execFileSync('git', ['init', hermesDir], inheritStdio);
+    execFileSync(
+      'git',
+      ['-C', hermesDir, 'remote', 'add', 'origin', HERMES_GITHUB_URL],
       inheritStdio,
     );
-    execSync(
-      `git -C "${hermesDir}" fetch --no-tags --depth 1 origin +${commit}:refs/remotes/origin/main`,
+    execFileSync(
+      'git',
+      [
+        '-C',
+        hermesDir,
+        'fetch',
+        '--no-tags',
+        '--depth',
+        '1',
+        'origin',
+        `+${commit}:refs/remotes/origin/main`,
+      ],
       {...inheritStdio, timeout: 300000},
     );
-    execSync(`git -C "${hermesDir}" checkout main`, inheritStdio);
+    execFileSync('git', ['-C', hermesDir, 'checkout', 'main'], inheritStdio);
 
     const reactNativeRoot = path.resolve(__dirname, '..', '..');
     const buildScript = path.join(
@@ -480,7 +494,7 @@ async function buildFromHermesCommit(
     };
 
     hermesLog(`Building Hermes frameworks (${buildType})...`);
-    execSync(`bash "${buildScript}"`, {
+    execFileSync('bash', [buildScript], {
       ...inheritStdio,
       cwd: hermesDir,
       timeout: 3600000, // 60 minutes
@@ -491,8 +505,9 @@ async function buildFromHermesCommit(
     const tarballName = `hermes-ios-${buildType.toLowerCase()}.tar.gz`;
     const tarballPath = path.join(artifactsPath, tarballName);
     hermesLog('Creating Hermes tarball from build output...');
-    execSync(
-      `tar -czf "${tarballPath}" -C "${hermesDir}" destroot`,
+    execFileSync(
+      'tar',
+      ['-czf', tarballPath, '-C', hermesDir, 'destroot'],
       inheritStdio,
     );
 

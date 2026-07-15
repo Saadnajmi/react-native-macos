@@ -1024,7 +1024,6 @@ class VirtualizedList extends StateSafePureComponent<
         // $FlowFixMe[prop-missing] React.Element internal inspection
         <VirtualizedListCellContextProvider
           cellKey={this._getCellKey() + '-empty'}
-          collapsable={Platform.OS !== 'macos'} // [macOS]
           key="$empty">
           {this._renderEmptyComponent(element, inversionStyle)}
         </VirtualizedListCellContextProvider>,
