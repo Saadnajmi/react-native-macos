@@ -12,11 +12,10 @@
 
 const headers = require('./headers');
 const utils = require('./utils');
-const childProcess = require('child_process');
+const {execFileSync} = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const {execSync} = childProcess;
 const {getHeaderFilesFromPodspecs} = headers;
 const {createFolderIfNotExists, createLogger} = utils;
 
@@ -68,17 +67,15 @@ function buildXCFrameworks(
   }
 
   // Build the XCFrameworks by using each framework folder as input
-  const frameworks = frameworkFolders
-    .map(frameworkFolder => {
-      return `-framework "${frameworkFolder}"`;
-    })
-    .join(' ');
+  const buildArguments = ['-create-xcframework'];
+  frameworkFolders.forEach(frameworkFolder => {
+    buildArguments.push('-framework', frameworkFolder);
+  });
+  buildArguments.push('-output', outputPath, '-allow-internal-distribution');
 
-  const buildCommand = `xcodebuild -create-xcframework ${frameworks} -output ${outputPath} -allow-internal-distribution`;
-
-  frameworkLog(buildCommand);
+  frameworkLog(`xcodebuild ${buildArguments.join(' ')}`);
   try {
-    execSync(buildCommand, {
+    execFileSync('xcodebuild', buildArguments, {
       cwd: rootFolder,
       stdio: 'inherit',
     });
@@ -183,7 +180,9 @@ function buildXCFrameworks(
     const destination = extractDestinationFromPath(symbol);
     const outputFolder = path.join(symbolOutput, destination);
     fs.mkdirSync(outputFolder, {recursive: true});
-    execSync(`cp -r ${symbol} ${outputFolder}`);
+    fs.cpSync(symbol, path.join(outputFolder, path.basename(symbol)), {
+      recursive: true,
+    });
   });
 
   if (identity) {
@@ -346,8 +345,11 @@ function signXCFramework(
   xcframeworkPath /*: string */,
 ) {
   frameworkLog('Signing XCFramework...');
-  const command = `codesign --timestamp --sign "${identity}" ${xcframeworkPath}`;
-  execSync(command, {stdio: 'inherit'});
+  execFileSync(
+    'codesign',
+    ['--timestamp', '--sign', identity, xcframeworkPath],
+    {stdio: 'inherit'},
+  );
 }
 
 module.exports = {
