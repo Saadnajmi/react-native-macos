@@ -53,5 +53,6 @@
     "bin",
     "dist",
     "!src/electron"
-  ]
+  ],
+  "private": true
 }
