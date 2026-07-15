@@ -13,7 +13,7 @@ const {
   hermesCommitAtMergeBase,
 } = require('./microsoft-hermes'); // [macOS]
 const {computeNightlyTarballURL, createLogger} = require('./utils');
-const {execSync} = require('child_process');
+const {execFileSync, execSync} = require('child_process');
 const fs = require('fs');
 const os = require('os'); // [macOS]
 const path = require('path');
@@ -120,7 +120,7 @@ async function prepareHermesArtifactsAsync(
   }
 
   // Extract the tar.gz
-  execSync(`tar -xzf "${localPath}" -C "${artifactsPath}"`, {
+  execFileSync('tar', ['-xzf', localPath, '-C', artifactsPath], {
     stdio: 'inherit',
   });
 
