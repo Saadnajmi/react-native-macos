@@ -476,30 +476,22 @@ if (ReactNativeFeatureFlags.reduceDefaultPropsInText()) {
         overrides.verticalAlign = undefined;
       }
 
-      if (overrides != null) {
-        // $FlowFixMe[incompatible-type]
-        _style = [_style, overrides];
-      }
-    }
-
-    // [macOS
-    // For some reason on macOS, Setting backgroundColor without borderRadius on Text will
-    // cause the color to spill pass the frame of the Text. We can solve this by setting a dummy
-    // value for borderRadius.
-    if (Platform.OS === 'macos') {
+      // [macOS
+      // Setting backgroundColor without borderRadius can spill beyond Text's frame on macOS.
       if (
+        Platform.OS === 'macos' &&
         'backgroundColor' in processedStyle &&
         !('borderRadius' in processedStyle)
       ) {
         overrides = overrides || ({}: {...TextStyleInternal});
         overrides.borderRadius = Number.MIN_VALUE;
       }
-    }
-    // macOS]
+      // macOS]
 
-    if (overrides != null) {
-      // $FlowFixMe[incompatible-type]
-      _style = [_style, overrides];
+      if (overrides != null) {
+        // $FlowFixMe[incompatible-type]
+        _style = [_style, overrides];
+      }
     }
 
     const _nativeID = id ?? nativeID;
