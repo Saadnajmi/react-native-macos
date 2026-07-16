@@ -7,6 +7,8 @@
 
 #import "RCTActivityIndicatorView.h"
 
+#ifndef RCT_REMOVE_LEGACY_ARCH
+
 #if TARGET_OS_OSX // [macOS
 #import <CoreImage/CIFilter.h>
 #import <CoreImage/CIVector.h>
@@ -57,7 +59,7 @@
 - (void)setActivityIndicatorViewStyle:(UIActivityIndicatorViewStyle)activityIndicatorViewStyle
 {
   _activityIndicatorViewStyle = activityIndicatorViewStyle;
-  
+
   switch (activityIndicatorViewStyle) {
     case UIActivityIndicatorViewStyleLarge:
       self.controlSize = NSControlSizeLarge;
@@ -126,3 +128,5 @@
 
 
 @end
+
+#endif // RCT_REMOVE_LEGACY_ARCH

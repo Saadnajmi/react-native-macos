@@ -7,7 +7,10 @@
 
 #import <React/RCTUIKit.h> // [macOS]
 
-@interface RCTActivityIndicatorView : UIActivityIndicatorView
+#ifndef RCT_REMOVE_LEGACY_ARCH
+
+__attribute__((deprecated("This API will be removed along with the legacy architecture.")))
+@interface RCTActivityIndicatorView : RCTUIActivityIndicatorView // [macOS]
 
 #if TARGET_OS_OSX // [macOS
 @property (nonatomic, assign) UIActivityIndicatorViewStyle activityIndicatorViewStyle;
@@ -19,3 +22,5 @@
 #endif // macOS]
 
 @end
+
+#endif // RCT_REMOVE_LEGACY_ARCH

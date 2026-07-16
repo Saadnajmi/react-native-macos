@@ -49,10 +49,7 @@ Pod::Spec.new do |s|
                             "HEADER_SEARCH_PATHS" => header_search_path.join(" "),
                           }
 
-  if ENV['USE_FRAMEWORKS']
-    s.header_mappings_dir     = './'
-    s.module_name             = 'React_FabricComponents'
-  end
+  resolve_use_frameworks(s, header_mappings_dir: "./", module_name: "React_FabricComponents")
 
   s.dependency "React-jsiexecutor"
   s.dependency "RCTRequired"
@@ -79,6 +76,7 @@ Pod::Spec.new do |s|
 
   depend_on_js_engine(s)
   add_rn_third_party_dependencies(s)
+  add_rncore_dependency(s)
 
   s.subspec "components" do |ss|
 
@@ -101,14 +99,25 @@ Pod::Spec.new do |s|
       sss.header_dir           = "react/renderer/components/safeareaview"
     end
 
-    ss.subspec "scrollview" do |sss|
-      sss.source_files         = podspec_sources(["react/renderer/components/scrollview/*.{m,mm,cpp,h}",
-                                  "react/renderer/components/scrollview/platform/cxx/**/*.{m,mm,cpp,h}"],
-                                  ["react/renderer/components/scrollview/*.h",
-                                  "react/renderer/components/scrollview/platform/cxx/**/*.h"])
-      sss.exclude_files        = "react/renderer/components/scrollview/tests"
-      sss.header_dir           = "react/renderer/components/scrollview"
-    end
+    # [macOS The "scrollview" subspec below duplicates source_files already declared in
+    # React-Fabric.podspec's "scrollview" subspec (which uses a recursive
+    # `react/renderer/components/scrollview/**/*` glob). The overlap causes
+    # ScrollViewShadowNode.cpp and friends to be compiled into both the
+    # React-Fabric and React-FabricComponents Pods targets, breaking consumers
+    # that link both libraries via `-all_load` (duplicate symbols). Comment it
+    # out here so scrollview is only built into React-Fabric -- where
+    # React-Fabric's mounting/internal/CullingContext.cpp already needs
+    # ScrollViewShadowNode anyway.
+    #
+    # ss.subspec "scrollview" do |sss|
+    #   sss.source_files         = podspec_sources(["react/renderer/components/scrollview/*.{m,mm,cpp,h}",
+    #                               "react/renderer/components/scrollview/platform/cxx/**/*.{m,mm,cpp,h}"],
+    #                               ["react/renderer/components/scrollview/*.h",
+    #                               "react/renderer/components/scrollview/platform/cxx/**/*.h"])
+    #   sss.exclude_files        = "react/renderer/components/scrollview/tests"
+    #   sss.header_dir           = "react/renderer/components/scrollview"
+    # end
+    # macOS]
 
     ss.subspec "text" do |sss|
       sss.source_files         = podspec_sources(["react/renderer/components/text/*.{m,mm,cpp,h}",
@@ -126,6 +135,14 @@ Pod::Spec.new do |s|
       sss.header_dir           = "react/renderer/components/iostextinput"
     end
 
+    ss.subspec "switch" do |sss|
+      sss.source_files         = podspec_sources(
+                                  ["react/renderer/components/switch/iosswitch/**/*.{m,mm,cpp,h}"],
+                                  ["react/renderer/components/switch/iosswitch/**/*.h"])
+      sss.exclude_files        = "react/renderer/components/switch/iosswitch/**/MacOS*.{m,mm,cpp,h}"
+      sss.header_dir           = "react/renderer/components/switch/"
+    end
+
     ss.subspec "textinput" do |sss|
       sss.source_files         = podspec_sources("react/renderer/components/textinput/*.{m,mm,cpp,h}", "react/renderer/components/textinput/**/*.h")
       sss.header_dir           = "react/renderer/components/textinput"
@@ -141,6 +158,12 @@ Pod::Spec.new do |s|
       sss.source_files         = "react/renderer/components/virtualview/**/*.{m,mm,cpp,h}"
       sss.exclude_files        = "react/renderer/components/virtualview/tests"
       sss.header_dir           = "react/renderer/components/virtualview"
+    end
+
+     ss.subspec "virtualviewexperimental" do |sss|
+      sss.source_files         = "react/renderer/components/virtualviewexperimental/**/*.{m,mm,cpp,h}"
+      sss.exclude_files        = "react/renderer/components/virtualviewexperimental/tests"
+      sss.header_dir           = "react/renderer/components/virtualviewexperimental"
     end
 
     # Legacy header paths for backwards compat

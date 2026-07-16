@@ -31,7 +31,6 @@ const config = {
     path.resolve(__dirname, '../normalize-color'),
     path.resolve(__dirname, '../polyfills'),
     path.resolve(__dirname, '../react-native'),
-    path.resolve(__dirname, '../react-native-test-library'),
     path.resolve(__dirname, '../virtualized-lists'),
     path.resolve(__dirname, '../react-native-popup-menu-android'),
   ],
@@ -39,6 +38,7 @@ const config = {
     blockList: [/..\/react-native\/sdks\/hermes/],
     extraNodeModules: {
       'react-native': path.resolve(__dirname, '../react-native'),
+      'react-native-macos': path.resolve(__dirname, '../react-native'), // [macOS] resolve the react-native -> react-native-macos redirect in yarn pnpm mode
     },
     platforms: ['ios', 'macos', 'android'], // [macOS]
   },

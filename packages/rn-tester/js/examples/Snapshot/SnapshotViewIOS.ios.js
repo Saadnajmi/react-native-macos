@@ -30,7 +30,7 @@ type SnapshotReadyEvent = NativeSyntheticEvent<
 
 type Props = $ReadOnly<{
   ...ViewProps,
-  onSnapshotReady?: ?(event: SnapshotReadyEvent) => mixed,
+  onSnapshotReady?: ?(event: SnapshotReadyEvent) => unknown,
   testIdentifier?: ?string,
 }>;
 
@@ -45,7 +45,7 @@ class SnapshotViewIOS extends React.Component<Props> {
     const testIdentifier = this.props.testIdentifier || 'test';
     const onSnapshotReady = this.props.onSnapshotReady || this.onDefaultAction;
     return (
-      // $FlowFixMe[prop-missing] - Typing ReactNativeComponent revealed errors
+      // $FlowFixMe[incompatible-type] - Typing ReactNativeComponent revealed errors
       <RCTSnapshot
         style={style.snapshot}
         {...this.props}

@@ -10,6 +10,8 @@
 // [macOS] Github#1412)
 'use strict';
 
+import type {RNTesterModuleExample} from '../../types/RNTesterTypes';
+
 const React = require('react');
 const ReactNative = require('react-native');
 
@@ -22,9 +24,12 @@ class FocusOnMountExample extends React.Component<{}> {
     if (this.ref.current) {
       const commands = UIManager.getViewManagerConfig('RCTView').Commands;
       if ('focus' in commands) {
+        const reactTag = findNodeHandle(this.ref.current);
+        if (reactTag == null) {
+          return;
+        }
         UIManager.dispatchViewManagerCommand(
-          // $FlowFixMe[incompatible-call]
-          findNodeHandle(this.ref.current),
+          reactTag,
           UIManager.getViewManagerConfig('RCTView').Commands.focus,
           undefined,
         );
@@ -52,4 +57,4 @@ exports.examples = [
       return <FocusOnMountExample />;
     },
   },
-];
+] as Array<RNTesterModuleExample>;

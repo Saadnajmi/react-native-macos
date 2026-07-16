@@ -20,13 +20,16 @@
  */
 
 const {execSync} = require('child_process');
-// $FlowFixMe[unclear-type]
-const argv = require('yargs').argv /*:: as any as $ReadOnly<{
+const argv /*:$ReadOnly<{
   maxWorkers?: number,
   jestBinary?: string,
   flowBinary?: string,
   yarnBinary?: string,
-}> */;
+}> */ =
+  // $FlowFixMe[incompatible-type]
+  // $FlowFixMe[incompatible-exact]
+  // $FlowFixMe[incompatible-indexer]
+  require('yargs').argv;
 
 const numberOfMaxWorkers = argv.maxWorkers ?? 1;
 
@@ -62,7 +65,7 @@ try {
   const flowCommand =
     FLOW_BINARY == null
       ? `${YARN_BINARY} run flow-check`
-      : `${FLOW_BINARY} check`;
+      : `${FLOW_BINARY} full-check`;
   execAndLog(flowCommand);
 
   /*

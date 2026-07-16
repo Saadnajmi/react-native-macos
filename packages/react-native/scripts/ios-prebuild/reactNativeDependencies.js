@@ -16,7 +16,7 @@ const {
   getLatestStableVersionFromNPM,
 } = require('./microsoft-hermes'); // [macOS]
 const {computeNightlyTarballURL, createLogger} = require('./utils');
-const {execSync} = require('child_process');
+const {execFileSync} = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const stream = require('stream');
@@ -108,7 +108,7 @@ async function prepareReactNativeDependenciesArtifactsAsync(
   // Extract the tar.gz
   const tmpPath = '/tmp/react-native-dependencies';
   fs.mkdirSync(tmpPath, {recursive: true});
-  execSync(`tar -xzf "${localPath}" -C "${tmpPath}"`, {
+  execFileSync('tar', ['-xzf', localPath, '-C', tmpPath], {
     stdio: 'inherit',
   });
 
@@ -120,9 +120,13 @@ async function prepareReactNativeDependenciesArtifactsAsync(
     'ReactNativeDependencies.xcframework',
   );
   // Copy the extracted files to the artifacts folder
-  execSync(`cp -R "${xcframeworkSource}" "${artifactsPath}"`, {
-    stdio: 'inherit',
-  });
+  fs.cpSync(
+    xcframeworkSource,
+    path.join(artifactsPath, path.basename(xcframeworkSource)),
+    {
+      recursive: true,
+    },
+  );
 
   // Delete the tarball after extraction
   if (!process.env.HERMES_ENGINE_TARBALL_PATH) {
@@ -155,10 +159,13 @@ type ReactNativeDependenciesEngineSourceType =
   | 'download_prebuilt_nightly_tarball'
 */
 
-const ReactNativeDependenciesEngineSourceTypes = {
-    DOWNLOAD_PREBUILD_TARBALL: 'download_prebuild_tarball',
-    DOWNLOAD_PREBUILT_NIGHTLY_TARBALL: 'download_prebuilt_nightly_tarball',
-  } /*:: as const */;
+const ReactNativeDependenciesEngineSourceTypes /*: {
+  +DOWNLOAD_PREBUILD_TARBALL: "download_prebuild_tarball",
+  +DOWNLOAD_PREBUILT_NIGHTLY_TARBALL: "download_prebuilt_nightly_tarball"
+} */ = {
+  DOWNLOAD_PREBUILD_TARBALL: 'download_prebuild_tarball',
+  DOWNLOAD_PREBUILT_NIGHTLY_TARBALL: 'download_prebuilt_nightly_tarball',
+};
 
 /**
  * Checks if the ReactNativeDependencies artifacts are already downloaded and up to date with the specified version.
@@ -211,7 +218,10 @@ function getTarballUrl(
   version /*: string */,
   buildType /*: BuildFlavor */,
 ) /*: string */ {
-  const mavenRepoUrl = 'https://repo1.maven.org/maven2';
+  // You can use the `ENTERPRISE_REPOSITORY` ariable to customise the base url from which artifacts will be downloaded.
+  // The mirror's structure must be the same of the Maven repo the react-native core team publishes on Maven Central.
+  const mavenRepoUrl =
+    process.env.ENTERPRISE_REPOSITORY ?? 'https://repo1.maven.org/maven2';
   const namespace = 'com/facebook/react';
   return `${mavenRepoUrl}/${namespace}/react-native-artifacts/${version}/react-native-artifacts-${version}-reactnative-dependencies-${buildType.toLowerCase()}.tar.gz`;
 }
@@ -226,6 +236,7 @@ async function getNightlyTarballUrl(
   return await computeNightlyTarballURL(
     version,
     buildType,
+    'react',
     coordinate,
     artifactName,
   );

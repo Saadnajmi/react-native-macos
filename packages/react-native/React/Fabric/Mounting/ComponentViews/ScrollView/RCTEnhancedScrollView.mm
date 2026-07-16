@@ -92,7 +92,8 @@
     return;
   }
 
-  CGFloat top = 0, left = 0;
+  CGFloat top = 0;
+  CGFloat left = 0;
   if (contentSize.width < boundsSize.width) {
     left = (boundsSize.width - contentSize.width) * 0.5f;
   }
@@ -234,6 +235,12 @@
 }
 
 #pragma mark - UIScrollViewDelegate
+
+- (void)scrollViewDidScroll:(__unused RCTUIScrollView *)scrollView // [macOS]
+{
+  // Empty implementation. This method exists to prevent crashes when the delegate splitter
+  // forwards scrollViewDidScroll: messages to RCTEnhancedScrollView.
+}
 
 - (void)scrollViewWillEndDragging:(RCTUIScrollView *)scrollView
                      withVelocity:(CGPoint)velocity

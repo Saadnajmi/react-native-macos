@@ -8,7 +8,7 @@
  * @format
  */
 
-const {PACKAGES_DIR} = require('../consts');
+const {PACKAGES_DIR} = require('../shared/consts');
 // $FlowFixMe[untyped-import]: TODO type ansi-styles
 const ansiStyles = require('ansi-styles');
 const {execSync, spawnSync} = require('child_process');
@@ -62,7 +62,7 @@ async function main() {
       'create-diff': createDiff,
       'no-build': noBuild,
     },
-    /* $FlowFixMe[incompatible-call] Natural Inference rollout. See
+    /* $FlowFixMe[incompatible-type] Natural Inference rollout. See
      * https://fburl.com/workplace/6291gfvu */
   } = parseArgs(config);
 
@@ -552,7 +552,12 @@ function generateChangelogTable(
     limitedCommits.forEach(commit => {
       const [hash, author, email, timestamp, subject] = commit.split('\0');
       // Escape pipe characters in the subject to avoid breaking the markdown table
-      const escapedSubject = subject.replace(/\|/g, '\\|');
+      const escapedSubject = subject
+        .replace(/\\/g, '\\\\')
+        .replace(/\|/g, '\\|')
+        .replace(/\[/g, '\\[')
+        .replace(/\]/g, '\\]')
+        .replace(/`/g, '\\`');
       // Create links for commit hash and description
       const commitUrl = `${DEVTOOLS_FRONTEND_REPO_URL}/commit/${hash}`;
       const hashLink = `[${hash}](${commitUrl})`;

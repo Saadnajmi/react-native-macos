@@ -49,7 +49,9 @@ Pod::Spec.new do |spec|
                       'folly/lang/CString.cpp',
                       'folly/lang/Exception.cpp',
                       'folly/memory/ReentrantAllocator.cpp',
+                      'folly/memory/SanitizeLeak.cpp', # [macOS]
                       'folly/memory/detail/MallocImpl.cpp',
+                      'folly/memory/SanitizeLeak.cpp',
                       'folly/net/NetOps.cpp',
                       'folly/portability/SysUio.cpp',
                       'folly/synchronization/SanitizeThread.cpp',

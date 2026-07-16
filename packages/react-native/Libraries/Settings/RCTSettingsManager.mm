@@ -43,7 +43,7 @@ RCT_EXPORT_MODULE()
 
 - (instancetype)initWithUserDefaults:(NSUserDefaults *)defaults
 {
-  if ((self = [super init])) {
+  if ((self = [super init]) != nullptr) {
     _defaults = defaults;
 
 #if !TARGET_OS_OSX // [macOS]
@@ -58,7 +58,7 @@ RCT_EXPORT_MODULE()
 
 - (facebook::react::ModuleConstants<JS::NativeSettingsManager::Constants>)constantsToExport
 {
-  return (facebook::react::ModuleConstants<JS::NativeSettingsManager::Constants>)[self getConstants];
+  return [self getConstants];
 }
 
 - (facebook::react::ModuleConstants<JS::NativeSettingsManager::Constants>)getConstants
@@ -90,7 +90,7 @@ RCT_EXPORT_METHOD(setValues : (NSDictionary *)values)
   _ignoringUpdates = YES;
   [values enumerateKeysAndObjectsUsingBlock:^(NSString *key, id json, BOOL *stop) {
     id plist = [RCTConvert NSPropertyList:json];
-    if (plist) {
+    if (plist != nullptr) {
       [self->_defaults setObject:plist forKey:key];
     } else {
       [self->_defaults removeObjectForKey:key];

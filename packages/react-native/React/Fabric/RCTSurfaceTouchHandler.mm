@@ -191,7 +191,7 @@ struct PointerHasher {
    * We hold the view weakly to prevent a retain cycle.
    */
   __weak RCTPlatformView *_rootComponentView; // [macOS]
-  RCTIdentifierPool<11> _identifierPool;
+  RCTIdentifierPool<17> _identifierPool;
 
   RCTSurfacePointerHandler *_pointerHandler;
 }
@@ -572,7 +572,11 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithTarget : (id)target action : (SEL)act
     shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
 {
   BOOL canBePrevented = [self canBePreventedByGestureRecognizer:otherGestureRecognizer];
+#if !TARGET_OS_OSX // [macOS]
+  if (canBePrevented && otherGestureRecognizer.cancelsTouchesInView) {
+#else // [macOS
   if (canBePrevented) {
+#endif // macOS]
     [self _cancelTouches];
   }
   return NO;
