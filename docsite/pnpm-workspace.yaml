@@ -1,0 +1,14 @@
+packages: []
+
+nodeLinker: hoisted
+minimumReleaseAge: 10080
+minimumReleaseAgeExclude: []
+allowBuilds:
+  # Its install script only prints a funding message; Docusaurus needs no build artifact.
+  core-js: false
+
+overrides:
+  # Earlier versions are affected by GHSA-5c6j-r48x-rmvq through Docusaurus.
+  serialize-javascript: ^7.0.3
+  # Older versions are vulnerable; 5.106+ is incompatible pending upstream work.
+  webpack: '>=5.104.1 <5.106.0'

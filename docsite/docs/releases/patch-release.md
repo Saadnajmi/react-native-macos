@@ -16,7 +16,7 @@ Roughly, run the following commands to:
 ```shell
 git switch -c 0.76/release upstream/0.76-stable
 git merge facebook/0.76-stable
-yarn nx release plan --message 'Sync to upstream React Native 0.76.x release' --only-touched=false patch
+pnpm exec nx release plan --message 'Sync to upstream React Native 0.76.x release' --only-touched=false patch
 ```
 
 Remember to update the peer dependency in `packages/react-native` for React Native macOS to the version you have merged to.

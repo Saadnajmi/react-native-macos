@@ -35,7 +35,7 @@ async function main() {
   Usage: node ./scripts/diff-api-snapshot <prev-snapshot> <new-snapshot>
 
   Analyze changes between two versions of React Native's JavaScript API
-  snapshot (yarn build-types). Returns a JSON object with the following
+  snapshot (pnpm run build-types). Returns a JSON object with the following
   fields:
     - result: 'BREAKING', 'POTENTIALLY_NON_BREAKING' or 'NON_BREAKING'.
     - changedApis: List of changed APIs.

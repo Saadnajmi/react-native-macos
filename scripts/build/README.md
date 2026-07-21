@@ -4,10 +4,10 @@ Shared build setup for the React Native monorepo.
 
 ## Overview
 
-These scripts form the modern build setup for JavaScript ([Flow](https://flow.org/)) packages in `react-native`, exposed as `yarn build`.
+These scripts form the modern build setup for JavaScript ([Flow](https://flow.org/)) packages in `react-native`, exposed as `pnpm run build`.
 
 > [!Tip]
-> Generally, React Native maintainers do not need to run `yarn build`, as all packages will run from source during development. Please continue reading if you are adding/removing a package or modifying its build configuration.
+> Generally, React Native maintainers do not need to run `pnpm run build`, as all packages will run from source during development. Please continue reading if you are adding/removing a package or modifying its build configuration.
 
 #### Key info
 
@@ -22,30 +22,30 @@ These scripts form the modern build setup for JavaScript ([Flow](https://flow.or
 > [!Note]
 > **🚧 Work in progress!** This is not the final state for our monorepo build tooling. Unfortunately, our solution options are narrow due to integration requirements with Meta's codebase.
 
-- Running `yarn build` will mutate `package.json` files in place, resulting in a dirty Git working copy.
+- Running `pnpm run build` will mutate `package.json` files in place, resulting in a dirty Git working copy.
 - We make use of "wrapper files" (`.js` → `.js.flow`) for each package entry point, to enable running from source with zero config. To validate these, package entry points must be explicitly defined via `"exports"`.
 
 ## Usage
 
-**💡 Reminder**: 99% of the time, there is no need to use `yarn build`, as all packages will run from source during development.
+**💡 Reminder**: 99% of the time, there is no need to use `pnpm run build`, as all packages will run from source during development.
 
 Build commands are exposed as npm scripts at the repo root.
 
 ```sh
 # Build all packages
-yarn build
+pnpm run build
 
 # Build a specific package
-yarn build dev-middleware
+pnpm run build dev-middleware
 
 # Clean build directories
-yarn clean
+pnpm run clean
 ```
 
 Once built, developing in the monorepo should continue to work — now using the compiled version of each package.
 
 > [!Warning]
-> **Build changes should not be committed**. Currently, `yarn build` will make changes to each `package.json` file, which should not be committed. This is validated in CI.
+> **Build changes should not be committed**. Currently, `pnpm run build` will make changes to each `package.json` file, which should not be committed. This is validated in CI.
 
 ## Configuration
 
@@ -63,7 +63,7 @@ const buildConfig /*: BuildConfig */ = {
 
 #### Required package structure
 
-Opting a package into the `yarn build` setup requires a strict file layout. This is done to simplify config and to force consistency across the monorepo.
+Opting a package into the `pnpm run build` setup requires a strict file layout. This is done to simplify config and to force consistency across the monorepo.
 
 ```sh
 packages/
@@ -81,7 +81,7 @@ Notes:
 
 ## Build behavior
 
-Running `yarn build` will compile each package following the below steps, depending on the configured `target` and other build options.
+Running `pnpm run build` will compile each package following the below steps, depending on the configured `target` and other build options.
 
 - Create a `dist/` directory, replicating each source file under `src/`:
   - For every `@flow` file, strip Flow annotations using [flow-api-extractor](https://www.npmjs.com/package/flow-api-translator).

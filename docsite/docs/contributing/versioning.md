@@ -12,5 +12,5 @@ React Native macOS uses [NX Release](https://nx.dev/features/manage-releases) to
 If you have a PR you'd like to be included in a new release, you can add a [version plan](https://nx.dev/recipes/nx-release/file-based-versioning-version-plans#file-based-versioning-version-plans) to it. 
 
 ```shell
-yarn nx release plan --message 'fix some bug' --only-touched=false patch
+pnpm exec nx release plan --message 'fix some bug' --only-touched=false patch
 ```

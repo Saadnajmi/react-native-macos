@@ -133,7 +133,7 @@ function isPackagerRunning(
 
 // this is a very limited implementation of how this should work
 function launchPackagerInSeparateWindow(folderPath /*: string */) {
-  const command = `tell application "Terminal" to do script "cd ${folderPath} && yarn start"`;
+  const command = `tell application "Terminal" to do script "cd ${folderPath} && pnpm run start"`;
   exec(`osascript -e '${command}' >/dev/null <<EOF`);
 }
 
