@@ -23,17 +23,17 @@ jobs:
           platform: 'macos'
 
       - name: Install npm dependencies
-        run: yarn install
+        run: pnpm install --frozen-lockfile
 
       - name: Build community CLI plugin
         run: |
-          yarn build
-          # yarn build rewrites package.json exports; restore them
+          pnpm run build
+          # The build rewrites package.json exports; restore them.
           git checkout -- packages/*/package.json
 
       - name: Build react-native-macos-init
         working-directory: packages/react-native-macos-init
-        run: yarn build
+        run: pnpm run build
 
       - name: Determine React Native version
         id: rn-version
@@ -55,7 +55,7 @@ jobs:
         run: |
           set -eox pipefail
           # Use a tarball instead of a direct path to avoid symlinks
-          yarn pack -o ${{ runner.temp }}/react-native-macos.tgz
+          pnpm pack --out ${{ runner.temp }}/react-native-macos.tgz
 
       - name: Install local react-native-macos
         working-directory: ${{ runner.temp }}/testcli

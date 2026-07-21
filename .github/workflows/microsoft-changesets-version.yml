@@ -26,7 +26,7 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: pnpm install --frozen-lockfile
 
       - name: Generate token for version PR
         uses: actions/create-github-app-token@v2
@@ -40,7 +40,7 @@ jobs:
       - name: Create Version Bump PR
         uses: changesets/action@v1
         with:
-          version: yarn changeset:version
+          version: pnpm run changeset:version
           createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}

@@ -11,45 +11,45 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Setup node.js
-      uses: ./.github/actions/setup-node
+    - name: Setup pnpm and Node.js
+      uses: ./.github/actions/pnpm-setup-node
       with:
         node-version: ${{ inputs.node-version }}
-    - name: Run yarn install
-      uses: ./.github/actions/yarn-install
+    - name: Install dependencies
+      uses: ./.github/actions/pnpm-install
     - name: Run linters against modified files (analysis-bot)
       shell: bash
-      run: yarn lint-ci
+      run: pnpm run lint-ci
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         GITHUB_PR_NUMBER: ${{ github.event.number }}
     - name: Lint code
       shell: bash
-      run: ./.github/workflow-scripts/exec_swallow_error.sh yarn lint --format junit -o ./reports/junit/eslint/results.xml
+      run: ./.github/workflow-scripts/exec_swallow_error.sh pnpm run lint --format junit -o ./reports/junit/eslint/results.xml
     - name: Lint file structure
       shell: bash
       run: ./.github/workflow-scripts/lint_files.sh
     - name: Verify not committing repo after running build
       shell: bash
-      run: yarn run build --validate
+      run: pnpm run build --validate
     - name: Run flowcheck
       shell: bash
-      run: yarn flow-check
+      run: pnpm run flow-check
     - name: Run typescript check
       shell: bash
-      run: yarn test-typescript
+      run: pnpm run test-typescript
     - name: Check license
       shell: bash
       run: ./.github/workflow-scripts/check_license.sh
     - name: Check formatting
       shell: bash
-      run: yarn run format-check
+      run: pnpm run format-check
     - name: Lint markdown
       shell: bash
-      run: yarn run lint-markdown
+      run: pnpm run lint-markdown
     - name: Build types
       shell: bash
-      run: yarn build-types --skip-snapshot
+      run: pnpm run build-types --skip-snapshot
     - name: Run typescript check of generated types
       shell: bash
-      run: yarn test-generated-typescript
+      run: pnpm run test-generated-typescript

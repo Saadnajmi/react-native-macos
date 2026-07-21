@@ -54,14 +54,14 @@ jobs:
         with:
           node-version: '22'
       - name: Install dependencies
-        run: yarn
+        run: pnpm install --frozen-lockfile
       - name: Show pending version bumps
-        run: yarn changeset status || true
+        run: pnpm exec changeset status
       - name: Build packages
-        run: yarn build
+        run: pnpm run build
       - name: Simulate publish (dry run)
         run: |
-          yarn workspaces foreach -vv --all --topological --no-private npm publish --tag dry-run --tolerate-republish --dry-run
+          pnpm -r publish --dry-run --force --no-git-checks --tag dry-run
 
   check-changesets:
     name: "Check for Changesets"
@@ -81,12 +81,14 @@ jobs:
         with:
           node-version: '22'
       - name: Install dependencies
-        run: yarn install --immutable
+        run: pnpm install --frozen-lockfile
       - name: Validate changesets
-        run: yarn change:check
+        run: pnpm run change:check
+      - name: Preview native pnpm version plan
+        run: pnpm version -r --dry-run
   
   yarn-constraints:
-    name: "Check Yarn Constraints"
+    name: "Check pnpm Package Policies"
     permissions: {}
     runs-on: ubuntu-latest
     steps:
@@ -99,9 +101,9 @@ jobs:
         with:
           node-version: '22'
       - name: Install dependencies
-        run: yarn
-      - name: Check constraints
-        run: yarn constraints
+        run: pnpm install --frozen-lockfile
+      - name: Check package policies
+        run: pnpm run policies:check
 
   javascript-tests:
     name: "JavaScript Tests"
@@ -119,19 +121,19 @@ jobs:
           node-version: '22'
       
       - name: Install npm dependencies
-        run: yarn install
+        run: pnpm install --frozen-lockfile
       
       - name: Run Jest tests
-        run: yarn test-ci
+        run: pnpm run test-ci
       
       - name: Run Flow type checker
-        run: yarn flow-check
+        run: pnpm run flow-check
       
       - name: Run ESLint
-        run: yarn lint
+        run: pnpm run lint
       
       - name: Run Prettier format check
-        run: yarn format-check
+        run: pnpm run format-check
 
   build-rntester:
     name: "Build RNTester"

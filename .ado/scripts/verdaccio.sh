@@ -6,6 +6,7 @@ set -eox pipefail
 
 case ${1-} in
   "configure")
+    # The cloned react-native-test-app checkout owns its Yarn configuration.
     yarn config set npmRegistryServer $NPM_REGISTRY
     yarn config set unsafeHttpWhitelist --json '["localhost"]'
     ;;
@@ -20,8 +21,8 @@ case ${1-} in
   "publish")
     checkpoint=$(git rev-parse HEAD)
     cp nx.test.json nx.json
-    yarn nx release version 1000.0.0
-    yarn nx release publish --registry $NPM_REGISTRY
+    pnpm exec nx release version 1000.0.0
+    pnpm exec nx release publish --registry $NPM_REGISTRY
     git reset --hard $checkpoint
     ;;
 esac

@@ -19,7 +19,7 @@ runs:
       shell: bash
       run: |
         cd /tmp/RNApp
-        yarn add ${{ inputs.library-npm-package }}
+        pnpm add ${{ inputs.library-npm-package }}
 
     # iOS
     - name: Setup xcode

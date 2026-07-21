@@ -16,15 +16,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup pnpm and Node.js
+        uses: ./.github/actions/pnpm-setup-node
         with:
           node-version: '22'
       - name: Install dependencies
-        run: yarn
+        run: pnpm install --frozen-lockfile
         working-directory: ./docsite
       - name: Build website
-        run: yarn build
+        run: pnpm run build
         working-directory: ./docsite
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
