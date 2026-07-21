@@ -38,7 +38,7 @@ jobs:
           platform: macos
 
       - name: Install npm dependencies
-        run: yarn install
+        run: pnpm install --frozen-lockfile
 
       # Step 1: Try to download a prebuilt Hermes tarball from upstream Maven/Sonatype.
       # Writes tarball= and version= to $GITHUB_OUTPUT if successful.

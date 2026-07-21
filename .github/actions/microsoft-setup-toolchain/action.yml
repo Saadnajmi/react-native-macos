@@ -8,8 +8,8 @@ inputs:
   cache-key-prefix:
     description: Prefix to add to the cache key
   cache-npm-dependencies:
-    description: Caches npm dependencies (supports npm, yarn, pnpm v6.10+)
-    default: yarn
+    description: Caches npm dependencies
+    default: pnpm
   java-version:
     description: Desired Java version
     default: "17"
@@ -52,7 +52,7 @@ runs:
           ccache --zero-stats 1> /dev/null
 
           clang --version > .clang-version
-          input=$(find . -maxdepth 1 -name .clang-version -o -name .yarnrc.yml | sort)
+          input=$(find . -maxdepth 1 \( -name .clang-version -o -name pnpm-workspace.yaml -o -name pnpm-lock.yaml \) | sort)
           echo "cache-key=$(cat "$podfile_lock" $input | shasum -a 256 | awk '{ print $1 }')" >> $GITHUB_OUTPUT
         fi
       shell: bash
@@ -62,6 +62,8 @@ runs:
       with:
         distribution: temurin
         java-version: ${{ inputs.java-version }}
+    - name: Set up pnpm
+      uses: pnpm/action-setup@v4
     - name: Set up Node.js
       uses: actions/setup-node@v4.4.0
       with:

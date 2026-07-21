@@ -16,10 +16,10 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "yarn clean && babel --out-dir lib src",
+    "build": "pnpm run clean && babel --out-dir lib src",
     "clean": "rimraf lib",
     "codegen": "npx react-native codegen",
-    "prepare": "yarn run codegen && yarn run build"
+    "prepack": "pnpm run codegen && pnpm run build"
   },
   "files": [
     "generated"
@@ -31,7 +31,7 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native-macos": "*"
+    "react-native-macos": "workspace:*"
   },
   "codegenConfig": {
     "name": "OSSLibraryExampleSpec",

@@ -40,7 +40,10 @@ async function getBaseBranch(): Promise<string> {
   const repoPath = repoUrl.match(/github\.com[:/](.+?)(?:\.git)?$/)?.[1] ?? '';
 
   const remotes = (await $`git remote -v`.quiet()).stdout;
-  const remote = (repoPath && remotes.match(new RegExp(`^(\\S+)\\s+.*${repoPath}`, 'm'))?.[1]) ?? 'origin';
+  const remote =
+    (repoPath &&
+      remotes.match(new RegExp(`^(\\S+)\\s+.*${repoPath}`, 'm'))?.[1]) ||
+    'origin';
 
   // In CI, use the PR target branch (e.g., origin/0.81-stable)
   if (process.env['GITHUB_BASE_REF']) {
@@ -55,7 +58,7 @@ async function getChangesetStatus(baseBranch: string): Promise<{ data: Changeset
   const STATUS_FILE = 'changeset-status.json';
 
   fs.writeJsonSync(STATUS_FILE, { releases: [], changesets: [] });
-  const result = await $`yarn changeset status --since=${baseBranch} --output ${STATUS_FILE}`.nothrow();
+  const result = await $`pnpm exec changeset status --since=${baseBranch} --output ${STATUS_FILE}`.nothrow();
   const data: ChangesetStatusOutput = fs.readJsonSync(STATUS_FILE);
   fs.removeSync(STATUS_FILE);
 
@@ -86,7 +89,7 @@ async function runCheck(baseBranch: string): Promise<void> {
 
   if (exitCode !== 0) {
     log.error('Some packages have been changed but no changesets were found.');
-    log.warn('Run `yarn change` to create a changeset, or `yarn changeset --empty` if no release is needed.\n');
+    log.warn('Run `pnpm run change` to create a changeset, or `pnpm exec changeset --empty` if no release is needed.\n');
     process.exit(1);
   }
 
@@ -98,7 +101,7 @@ async function runCheck(baseBranch: string): Promise<void> {
 
 /** Run `changeset add` interactively against the correct upstream base branch. */
 async function runAdd(baseBranch: string): Promise<void> {
-  await $({ stdio: 'inherit' })`yarn changeset --since ${baseBranch}`;
+  await $({ stdio: 'inherit' })`pnpm exec changeset --since ${baseBranch}`;
 }
 
 const { values: args } = parseArgs({ options: { check: { type: 'boolean', default: false } } });

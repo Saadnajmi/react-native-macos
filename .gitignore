@@ -184,11 +184,8 @@ fix_*.patch
 /packages/*/dist/
 
 #[macOS
-# Yarn
-.yarn/*
-!.yarn/patches/
-!.yarn/plugins/
-!.yarn/releases/
+# pnpm
+.pnpm-store/
 
 # Ccache
 .ccache

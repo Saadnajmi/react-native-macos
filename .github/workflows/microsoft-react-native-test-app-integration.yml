@@ -22,14 +22,14 @@ jobs:
           platform: 'macos'
 
       - name: Install npm dependencies
-        run: yarn install
+        run: pnpm install --frozen-lockfile
 
       - name: Build community CLI plugin
-        run: yarn build
+        run: pnpm run build
 
       - name: Build react-native-macos-init
         working-directory: packages/react-native-macos-init
-        run: yarn build
+        run: pnpm run build
 
       - name: Start Verdaccio server
         run: |

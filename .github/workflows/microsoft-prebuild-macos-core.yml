@@ -41,7 +41,7 @@ jobs:
 
       - name: Install npm dependencies
         if: steps.cache-slice.outputs.cache-hit != 'true'
-        run: yarn install
+        run: pnpm install --frozen-lockfile
 
       - name: Download Hermes artifacts
         if: steps.cache-slice.outputs.cache-hit != 'true'
@@ -118,7 +118,7 @@ jobs:
 
       - name: Install npm dependencies
         if: steps.cache-xcframework.outputs.cache-hit != 'true'
-        run: yarn install
+        run: pnpm install --frozen-lockfile
 
       - name: Download slice artifacts
         if: steps.cache-xcframework.outputs.cache-hit != 'true'

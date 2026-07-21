@@ -43,6 +43,20 @@ function readPkgJsonInDirectory(dir /*: string */) /*: $FlowFixMe */ {
   return JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
 }
 
+function findPnpmWorkspaceRoot(startPath /*: string */) /*: string | null */ {
+  let currentPath = startPath;
+  while (currentPath !== path.dirname(currentPath)) {
+    if (
+      fs.existsSync(path.join(currentPath, 'pnpm-workspace.yaml')) &&
+      fs.existsSync(path.join(currentPath, 'pnpm-lock.yaml'))
+    ) {
+      return currentPath;
+    }
+    currentPath = path.dirname(currentPath);
+  }
+  return null;
+}
+
 function buildCodegenIfNeeded() {
   if (!fs.existsSync(CODEGEN_REPO_PATH)) {
     return;
@@ -54,11 +68,15 @@ function buildCodegenIfNeeded() {
     return;
   }
   codegenLog('Building react-native-codegen package.', true);
-  execSync('yarn install', {
-    cwd: CODEGEN_REPO_PATH,
-    stdio: 'inherit',
-  });
-  execSync('yarn build', {
+  const usesPnpm = findPnpmWorkspaceRoot(CODEGEN_REPO_PATH) != null;
+  execSync(
+    usesPnpm ? 'corepack pnpm install --frozen-lockfile' : 'yarn install',
+    {
+      cwd: CODEGEN_REPO_PATH,
+      stdio: 'inherit',
+    },
+  );
+  execSync(usesPnpm ? 'corepack pnpm run build' : 'yarn build', {
     cwd: CODEGEN_REPO_PATH,
     stdio: 'inherit',
   });

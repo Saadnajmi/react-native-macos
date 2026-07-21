@@ -30,7 +30,9 @@ jobs:
     - template: /.ado/templates/configure-git.yml@self
 
     - script: |
-        yarn install
+        corepack enable
+        pnpm --version
+        pnpm install --frozen-lockfile
       displayName: Install npm dependencies
 
     - script: |
@@ -40,14 +42,13 @@ jobs:
     # Disable Nightly publishing on the main branch
     - ${{ if endsWith(variables['Build.SourceBranchName'], '-stable') }}:
       - script: |
-          yarn config set npmPublishAccess public
-          yarn config set npmPublishRegistry "https://registry.npmjs.org"
-          yarn config set npmAuthToken $(npmAuthToken)
-        displayName: Configure yarn for npm publishing
+          npm config set registry "https://registry.npmjs.org"
+          npm config set //registry.npmjs.org/:_authToken $(npmAuthToken)
+        displayName: Configure npm publishing
         condition: and(succeeded(), eq(variables['publish_react_native_macos'], '1'))
 
       - script: |
-          yarn workspaces foreach -vv --all --topological --no-private npm publish --tag $(publishTag) --tolerate-republish
+          pnpm -r publish --access public --tag $(publishTag) --no-git-checks
         displayName: Publish packages
         condition: and(succeeded(), eq(variables['publish_react_native_macos'], '1'))
 
@@ -57,8 +58,7 @@ jobs:
         condition: and(succeeded(), eq(variables['publish_react_native_macos'], '1'))
 
     - script: |
-        yarn config unset npmPublishAccess || true
-        yarn config unset npmAuthToken || true
-        yarn config unset npmPublishRegistry || true
+        npm config delete //registry.npmjs.org/:_authToken || true
+        npm config delete registry || true
       displayName: Remove NPM auth configuration
       condition: always()

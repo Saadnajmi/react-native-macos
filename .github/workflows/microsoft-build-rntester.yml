@@ -47,7 +47,7 @@ jobs:
           project-root: 'packages/rn-tester'
 
       - name: Install npm dependencies
-        run: yarn install
+        run: pnpm install --frozen-lockfile
 
       - name: Install Pods
         working-directory: packages/rn-tester

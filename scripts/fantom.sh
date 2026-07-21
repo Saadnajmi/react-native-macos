@@ -7,8 +7,8 @@
 set -e
 
 if [[ -f "BUCK" && -z "$FANTOM_FORCE_OSS_BUILD" ]]; then
-  JS_DIR='..' yarn jest --config private/react-native-fantom/config/jest.config.js "$@"
+  JS_DIR='..' pnpm exec jest --config private/react-native-fantom/config/jest.config.js "$@"
 else
-  yarn workspace @react-native/fantom build
-  FANTOM_FORCE_OSS_BUILD=1 yarn jest --config private/react-native-fantom/config/jest.config.js "$@"
+  pnpm --filter @react-native/fantom run build
+  FANTOM_FORCE_OSS_BUILD=1 pnpm exec jest --config private/react-native-fantom/config/jest.config.js "$@"
 fi

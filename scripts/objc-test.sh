@@ -149,7 +149,7 @@ main() {
     waitForWebSocketServer
 
     # Start the packager
-    yarn start --max-workers=1 || echo "Can't start packager automatically" &
+    pnpm run start --max-workers=1 || echo "Can't start packager automatically" &
     waitForPackager
     preloadBundlesRNTester
     preloadBundlesRNIntegrationTests

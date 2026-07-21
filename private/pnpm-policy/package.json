@@ -1,0 +1,16 @@
+{
+  "name": "@react-native-macos/pnpm-plugin-policy",
+  "version": "1000.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/policy.mjs",
+    "./hook": "./src/hook.mjs"
+  },
+  "bin": {
+    "rnm-policies": "./bin/policies.mjs"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}

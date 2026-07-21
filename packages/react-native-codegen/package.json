@@ -22,9 +22,9 @@
     "node": ">= 22.14.0"
   },
   "scripts": {
-    "build": "yarn clean && node scripts/build.js --verbose",
+    "build": "pnpm run clean && node scripts/build.js --verbose",
     "clean": "rimraf lib",
-    "prepare": "yarn run build"
+    "prepack": "pnpm run build"
   },
   "files": [
     "lib"
