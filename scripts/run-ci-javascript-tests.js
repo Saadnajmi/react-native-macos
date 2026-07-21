@@ -15,8 +15,8 @@
  * Available arguments:
  * --maxWorkers [num] - how many workers, default 1
  * --jestBinary [path] - path to jest binary, defaults to local node modules
- * --pnpmBinary [path] - path to pnpm binary, defaults to pnpm
- * --flowBinary [path] - path to flow binary, defaults to running `pnpm run flow-check`
+ * --yarnBinary [path] - path to yarn binary, defaults to yarn
+ * --flowBinary [path] - path to flow binary, defaults to running `yarn run flow-check`
  */
 
 const {execSync} = require('child_process');
@@ -25,14 +25,14 @@ const argv = require('yargs').argv /*:: as any as $ReadOnly<{
   maxWorkers?: number,
   jestBinary?: string,
   flowBinary?: string,
-  pnpmBinary?: string,
+  yarnBinary?: string,
 }> */;
 
 const numberOfMaxWorkers = argv.maxWorkers ?? 1;
 
 const JEST_BINARY = argv.jestBinary ?? './node_modules/.bin/jest';
 const FLOW_BINARY = argv.flowBinary;
-const PNPM_BINARY = argv.pnpmBinary ?? 'pnpm';
+const YARN_BINARY = argv.yarnBinary ?? 'yarn';
 
 class ExecError extends Error {
   constructor(cause /*: Error */) {
@@ -49,19 +49,19 @@ try {
   console.log('Executing JavaScript tests');
 
   describe('Test: feature flags codegen');
-  execAndLog(`${PNPM_BINARY} run featureflags --verify-unchanged`);
+  execAndLog(`${YARN_BINARY} run featureflags --verify-unchanged`);
   describe('Test: eslint');
-  execAndLog(`${PNPM_BINARY} run lint`);
+  execAndLog(`${YARN_BINARY} run lint`);
   describe('Test: No JS build artifacts');
-  execAndLog(`${PNPM_BINARY} run build --validate`);
+  execAndLog(`${YARN_BINARY} run build --validate`);
 
   describe('Test: Validate JS API snapshot');
-  execAndLog(`${PNPM_BINARY} run build-types --validate`);
+  execAndLog(`${YARN_BINARY} run build-types --validate`);
 
   describe('Test: Flow check');
   const flowCommand =
     FLOW_BINARY == null
-      ? `${PNPM_BINARY} run flow-check`
+      ? `${YARN_BINARY} run flow-check`
       : `${FLOW_BINARY} check`;
   execAndLog(flowCommand);
 
@@ -74,10 +74,10 @@ try {
    */
 
   describe('Test: Build @react-native/codegen');
-  execAndLog(`${PNPM_BINARY} --dir ./packages/react-native-codegen run build`);
+  execAndLog(`${YARN_BINARY} --cwd ./packages/react-native-codegen run build`);
   describe('Test: Build @react-native/codegen-typescript-test');
   execAndLog(
-    `${PNPM_BINARY} --dir ./private/react-native-codegen-typescript-test run build`,
+    `${YARN_BINARY} --cwd ./private/react-native-codegen-typescript-test run build`,
   );
 
   describe('Test: Jest');
@@ -86,7 +86,7 @@ try {
   );
 
   describe('Test: TypeScript tests');
-  execAndLog(`${PNPM_BINARY} run test-typescript`);
+  execAndLog(`${YARN_BINARY} run test-typescript`);
 } catch (e) {
   if (e instanceof ExecError) {
     console.error(e.message);

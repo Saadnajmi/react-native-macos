@@ -6,7 +6,6 @@ set -eox pipefail
 
 case ${1-} in
   "configure")
-    # The cloned react-native-test-app checkout owns its Yarn configuration.
     yarn config set npmRegistryServer $NPM_REGISTRY
     yarn config set unsafeHttpWhitelist --json '["localhost"]'
     ;;

@@ -4,7 +4,7 @@ TypeScript build pipeline for React Native's JavaScript API.
 
 ## Overview
 
-`pnpm run build-types` is a custom build pipeline for translating React Native's Flow source code to TypeScript.
+`yarn build-types` is a custom build pipeline for translating React Native's Flow source code to TypeScript.
 
 Specifically, it reduces the runtime JavaScript API of `react-native` into two outputs:
 
@@ -17,23 +17,23 @@ Snapshot file of the public API shape, used by maintainers\
 
 #### Dependencies
 
-`pnpm run build-types` makes use of the following dependencies, composed with other pre/post transformation steps and dependency resolution.
+`yarn build-types` makes use of the following dependencies, composed with other pre/post transformation steps and dependency resolution.
 
 - Flow → TypeScript conversion: [flow-api-extractor](https://www.npmjs.com/package/flow-api-translator)
 - TypeScript → (initial) API rollup: [@microsoft/api-extractor](https://api-extractor.com/)
 
 ## Usage
 
-`pnpm run build-types` is designed to be run by maintainers with minimal arguments.
+`yarn build-types` is designed to be run by maintainers with minimal arguments.
 
 > API snapshot generation is currently **experimental**, and will be folded into the default behaviour when ready.
 
 ```sh
 # Build types + API snapshot
-pnpm run build-types [--validate]
+yarn build-types [--validate]
 
 # Build types without API snapshot
-pnpm run build-types --skip-snapshot
+yarn build-types --skip-snapshot
 ```
 
 #### Configuration

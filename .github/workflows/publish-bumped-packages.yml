@@ -14,14 +14,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup pnpm and Node.js
-        uses: ./.github/actions/pnpm-setup-node
-      - name: Install dependencies
-        uses: ./.github/actions/pnpm-install
+      - name: Setup node.js
+        uses: ./.github/actions/setup-node
+      - name: Run Yarn Install
+        uses: ./.github/actions/yarn-install
       - name: Build packages
-        run: pnpm run build
+        run: yarn build
       - name: Build types
-        run: pnpm run build-types --skip-snapshot
+        run: yarn build-types --skip-snapshot
       - name: Set NPM auth token
         run: echo "//registry.npmjs.org/:_authToken=$GHA_NPM_TOKEN" > ~/.npmrc
       - name: Find and publish all bumped packages

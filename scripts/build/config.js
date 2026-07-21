@@ -31,7 +31,7 @@ export type BuildConfig = $ReadOnly<{
 /**
  * - BUILD CONFIG -
  *
- * Add packages here to configure them as part of the monorepo `pnpm run build`
+ * Add packages here to configure them as part of the monorepo `yarn build`
  * setup. These must use a consistent package structure and (today) target
  * Node.js packages only.
  */

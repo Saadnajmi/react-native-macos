@@ -28,7 +28,7 @@ jobs:
       - name: Build community CLI plugin
         run: |
           pnpm run build
-          # The build rewrites package.json exports; restore them.
+          # yarn build rewrites package.json exports; restore them
           git checkout -- packages/*/package.json
 
       - name: Build react-native-macos-init

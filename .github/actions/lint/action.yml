@@ -11,45 +11,45 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Setup pnpm and Node.js
-      uses: ./.github/actions/pnpm-setup-node
+    - name: Setup node.js
+      uses: ./.github/actions/setup-node
       with:
         node-version: ${{ inputs.node-version }}
-    - name: Install dependencies
-      uses: ./.github/actions/pnpm-install
+    - name: Run yarn install
+      uses: ./.github/actions/yarn-install
     - name: Run linters against modified files (analysis-bot)
       shell: bash
-      run: pnpm run lint-ci
+      run: yarn lint-ci
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         GITHUB_PR_NUMBER: ${{ github.event.number }}
     - name: Lint code
       shell: bash
-      run: ./.github/workflow-scripts/exec_swallow_error.sh pnpm run lint --format junit -o ./reports/junit/eslint/results.xml
+      run: ./.github/workflow-scripts/exec_swallow_error.sh yarn lint --format junit -o ./reports/junit/eslint/results.xml
     - name: Lint file structure
       shell: bash
       run: ./.github/workflow-scripts/lint_files.sh
     - name: Verify not committing repo after running build
       shell: bash
-      run: pnpm run build --validate
+      run: yarn run build --validate
     - name: Run flowcheck
       shell: bash
-      run: pnpm run flow-check
+      run: yarn flow-check
     - name: Run typescript check
       shell: bash
-      run: pnpm run test-typescript
+      run: yarn test-typescript
     - name: Check license
       shell: bash
       run: ./.github/workflow-scripts/check_license.sh
     - name: Check formatting
       shell: bash
-      run: pnpm run format-check
+      run: yarn run format-check
     - name: Lint markdown
       shell: bash
-      run: pnpm run lint-markdown
+      run: yarn run lint-markdown
     - name: Build types
       shell: bash
-      run: pnpm run build-types --skip-snapshot
+      run: yarn build-types --skip-snapshot
     - name: Run typescript check of generated types
       shell: bash
-      run: pnpm run test-generated-typescript
+      run: yarn test-generated-typescript

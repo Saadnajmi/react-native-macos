@@ -214,7 +214,7 @@ async function testRNTester(
   onReleaseBranch /*: boolean */,
 ) {
   // Build Codegen as we're on a empty environment and metro needs it.
-  // This can be removed once we have codegen hooked in the `pnpm run build` step.
+  // This can be removed once we have codegen hooked in the `yarn build` step.
   console.info('[Codegen] >>> Building react-native-codegen...');
   exec('./packages/react-native-codegen/scripts/oss/build.sh');
 

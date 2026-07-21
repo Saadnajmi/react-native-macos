@@ -62,13 +62,11 @@ jobs:
         run: |
           set -eo pipefail
           ${{ github.workspace }}/.ado/scripts/verdaccio.sh configure
-          # This external checkout owns a Yarn lockfile and package-manager configuration.
           yarn --no-immutable
 
       - name: Bundle JavaScript
         working-directory: react-native-test-app/example
         run: |
-          # This external checkout remains Yarn-managed.
           yarn build:macos || yarn build:macos
 
       - name: Install Pods
