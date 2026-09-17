@@ -22,7 +22,7 @@
     "macos"
   ],
   "dependencies": {
-    "react-native-test-library-common": "0.87.0-main"
+    "react-native-test-library-common": "workspace:*"
   },
   "peerDependencies": {
     "react": "*",

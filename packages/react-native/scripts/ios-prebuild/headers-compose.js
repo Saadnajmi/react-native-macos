@@ -205,6 +205,12 @@ function emitReactFrameworkHeaders(
 
   for (const slice of slices) {
     const fwk = path.join(xcfwPath, slice, 'React.framework');
+    // [macOS] Versioned frameworks expose Headers/Modules/Resources through
+    // symlinks. Write resources beside the binary's versioned resource bundle.
+    const resources = fs.existsSync(path.join(fwk, 'Versions', 'Current'))
+      ? path.join(fwk, 'Versions', 'Current', 'Resources')
+      : fwk;
+    fs.mkdirSync(resources, {recursive: true});
     fs.rmSync(path.join(fwk, 'Headers'), {recursive: true, force: true});
     execFileSync('/bin/cp', [CP_FLAGS, stage, path.join(fwk, 'Headers')]);
     fs.rmSync(path.join(fwk, 'Modules'), {recursive: true, force: true});
@@ -215,14 +221,14 @@ function emitReactFrameworkHeaders(
     );
     if (privacyManifest != null) {
       fs.writeFileSync(
-        path.join(fwk, 'PrivacyInfo.xcprivacy'),
+        path.join(resources, 'PrivacyInfo.xcprivacy'),
         serializePrivacyManifest(privacyManifest),
       );
     }
     // Clone the prebuilt RCTI18nStrings.bundle so the framework-aware
     // RCTLocalizedString loader resolves React-Core's strings in prebuilt/SPM.
     if (i18nLocales > 0 && i18nBundleStage != null) {
-      const dest = path.join(fwk, 'RCTI18nStrings.bundle');
+      const dest = path.join(resources, 'RCTI18nStrings.bundle');
       fs.rmSync(dest, {recursive: true, force: true});
       execFileSync('/bin/cp', [CP_FLAGS, i18nBundleStage, dest]);
     }

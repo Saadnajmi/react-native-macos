@@ -6,6 +6,10 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "customConditions": ["react-native-legacy-deep-imports"],
-    "ignoreDeprecations": "6.0"
+    // [macOS] Match the legacy variant to the fork's hand-written types.
+    "paths": {
+      "react-native": ["../types/index.d.ts"],
+      "react-native/*": ["../*"]
+    }
   }
 }

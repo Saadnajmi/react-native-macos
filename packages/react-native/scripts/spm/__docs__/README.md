@@ -17,6 +17,23 @@ The motivation, staged migration plan, and open questions live in
 [RFC0994](https://github.com/react-native-community/discussions-and-proposals/blob/main/proposals/0994-swift-package-manager-support-for-react-native-ios-projects.md).
 The documents here describe how the implementation actually works.
 
+### macOS fork integration
+
+The fork preserves the `RCTUIKit` module and its React compatibility imports.
+Prebuilt core mode uses a dependency-only `React-RCTUIKit` facade: the header
+sidecar owns its headers, and the React binary product includes its
+implementation. Header sidecars follow the binary's platform slices. Generated
+linker defaults select AppKit on macOS and UIKit on the supported iOS-family
+platforms.
+
+These foundations do not yet make the app setup flow platform-neutral. The
+project injector still selects mobile/Catalyst slices and uses iOS codegen
+directories; end-to-end macOS app setup requires the later platform integration.
+
+The React Native CLI accepts `--configCommand`; direct invocation of
+`scripts/setup-apple-spm.js` uses `--config-command`. Both reach the same JSON
+argv parser and persisted command.
+
 ## 🚀 Usage
 
 ```bash

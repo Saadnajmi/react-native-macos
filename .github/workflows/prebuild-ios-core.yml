@@ -9,7 +9,7 @@ on:
         required: false
         default: ''
       use-hermes-prebuilt:
-        description: 'Whether to resolve Hermes from the latest-v1 npm dist-tag (true) or from the version pinned in version.properties (false)'
+        description: 'Compatibility input; Hermes always uses the exact version pinned in the fork SDK metadata'
         type: boolean
         required: false
         default: false
@@ -43,14 +43,8 @@ jobs:
       - name: Set Hermes version
         shell: bash
         run: |
-          # Non-stable RN builds resolve Hermes from npm's latest-v1 dist-tag.
-          # TODO: rename 'latest-v1' to 'latest' once V1 is the only Hermes on npm.
-          # Stable builds use the version pinned in version.properties.
-          if [ "${{ inputs.use-hermes-prebuilt }}" == "true" ]; then
-            HERMES_VERSION="latest-v1"
-          else
-            HERMES_VERSION=$(sed -n 's/^HERMES_VERSION_NAME=//p' packages/react-native/sdks/hermes-engine/version.properties)
-          fi
+          # [macOS] Both slice and compose jobs use the fork's exact SDK metadata.
+          HERMES_VERSION=$(node -p "require('./packages/react-native/scripts/ios-prebuild/hermes-version').readHermesMetadata('single').version")
           echo "Using Hermes version: $HERMES_VERSION"
           echo "HERMES_VERSION=$HERMES_VERSION" >> $GITHUB_ENV
       - name: Set React Native version
@@ -133,7 +127,7 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: packages/react-native/.build/output/xcframeworks
-          key: v4-ios-core-xcframework-${{ matrix.flavor }}-${{ hashFiles('packages/react-native/Package.swift', 'packages/react-native/scripts/ios-prebuild/*.js', 'packages/react-native/scripts/ios-prebuild.js', 'packages/react-native/React/**/*', 'packages/react-native/ReactCommon/**/*', 'packages/react-native/Libraries/**/*') }}
+          key: v5-ios-core-xcframework-${{ matrix.flavor }}-${{ hashFiles('packages/react-native/Package.swift', 'packages/react-native/scripts/ios-prebuild/*.js', 'packages/react-native/scripts/ios-prebuild.js', 'packages/react-native/React/**/*', 'packages/react-native/ReactCommon/**/*', 'packages/react-native/Libraries/**/*') }}
       - name: Setup node.js
         if: steps.restore-ios-xcframework.outputs.cache-hit != 'true'
         uses: ./.github/actions/setup-node
@@ -179,14 +173,8 @@ jobs:
         if: steps.restore-ios-xcframework.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          # Non-stable RN builds resolve Hermes from npm's latest-v1 dist-tag.
-          # TODO: rename 'latest-v1' to 'latest' once V1 is the only Hermes on npm.
-          # Stable builds use the version pinned in version.properties.
-          if [ "${{ inputs.use-hermes-prebuilt }}" == "true" ]; then
-            HERMES_VERSION="latest-v1"
-          else
-            HERMES_VERSION=$(sed -n 's/^HERMES_VERSION_NAME=//p' packages/react-native/sdks/hermes-engine/version.properties)
-          fi
+          # [macOS] Match the slice job's SDK metadata, not a live npm dist-tag.
+          HERMES_VERSION=$(node -p "require('./packages/react-native/scripts/ios-prebuild/hermes-version').readHermesMetadata('single').version")
           echo "Using Hermes version: $HERMES_VERSION"
           echo "HERMES_VERSION=$HERMES_VERSION" >> $GITHUB_ENV
       - name: Stage Hermes headers
@@ -267,4 +255,4 @@ jobs:
             packages/react-native/.build/output/xcframeworks/ReactCore${{matrix.flavor}}.xcframework.tar.gz
             packages/react-native/.build/output/xcframeworks/ReactCore${{matrix.flavor}}.framework.dSYM.tar.gz
             packages/react-native/.build/output/xcframeworks/ReactNativeHeaders${{matrix.flavor}}.xcframework.tar.gz
-          key: v4-ios-core-xcframework-${{ matrix.flavor }}-${{ hashFiles('packages/react-native/Package.swift', 'packages/react-native/scripts/ios-prebuild/*.js', 'packages/react-native/scripts/ios-prebuild.js', 'packages/react-native/React/**/*', 'packages/react-native/ReactCommon/**/*', 'packages/react-native/Libraries/**/*') }}
+          key: v5-ios-core-xcframework-${{ matrix.flavor }}-${{ hashFiles('packages/react-native/Package.swift', 'packages/react-native/scripts/ios-prebuild/*.js', 'packages/react-native/scripts/ios-prebuild.js', 'packages/react-native/React/**/*', 'packages/react-native/ReactCommon/**/*', 'packages/react-native/Libraries/**/*') }}

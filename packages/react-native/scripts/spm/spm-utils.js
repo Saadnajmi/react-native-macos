@@ -240,10 +240,13 @@ function resolveReactNativeRoot(
   function addAncestorCandidates(startDir /*: string */) /*: void */ {
     let dir = path.resolve(startDir);
     while (true) {
-      const candidate = path.join(dir, 'node_modules', 'react-native');
-      if (!seen.has(candidate)) {
-        seen.add(candidate);
-        candidates.push(candidate);
+      // [macOS] Prefer this fork when both packages are installed.
+      for (const name of ['react-native-macos', 'react-native']) {
+        const candidate = path.join(dir, 'node_modules', name);
+        if (!seen.has(candidate)) {
+          seen.add(candidate);
+          candidates.push(candidate);
+        }
       }
       const parent = path.dirname(dir);
       if (parent === dir) {
@@ -689,7 +692,7 @@ function runCodegenAndInstallTemplate(
 // Autolinking-plugin script phases — the shared validation rules. Two gates
 // apply them with different POLICIES (invokePlugins throws, the injector's
 // sidecar reader skips the entry), so only the rules live here. See
-// __doc__/spm-autolinking-plugins.md for the reasoning.
+// __docs__/spm-autolinking-plugins.md for the reasoning.
 // ---------------------------------------------------------------------------
 
 // `@` and `/` are admitted so a package can use its own scoped npm name

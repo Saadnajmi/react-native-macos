@@ -19,7 +19,7 @@ const childProcess = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const {execFileSync} = childProcess;
+const {execFileSync} = childProcess; // [macOS]
 const {createLogger, findFirst} = utils;
 
 const frameworkLog = createLogger('XCFramework');

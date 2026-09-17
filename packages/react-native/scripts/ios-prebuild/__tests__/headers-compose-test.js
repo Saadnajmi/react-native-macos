@@ -10,11 +10,14 @@
 
 'use strict';
 
+import type {HeadersSpecPlan} from '../headers-spec';
+
 const resources = require('../framework-resources');
 const {
   COMPOSE_TOOLING_FILES,
   buildReactNativeHeadersXcframework,
   composeToolingHash,
+  emitReactFrameworkHeaders,
   ensureHeadersLayout,
 } = require('../headers-compose');
 const inventory = require('../headers-inventory');
@@ -48,6 +51,81 @@ describe('COMPOSE_TOOLING_FILES stays in sync with headers-compose.js requires',
   });
 });
 
+test('only the version header uses the built overlay on iOS and macOS slices', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'stamped-headers-'));
+  const rnRoot = path.join(root, 'source');
+  const overlay = path.join(root, 'built');
+  const xcfw = path.join(root, 'React.xcframework');
+  const versionSource = 'React/Base/ReactNativeVersion.h';
+  const tracingSource =
+    'ReactCommon/jsinspector-modern/tracing/TraceRecordingState.h';
+  const sentinel = '#define REACT_NATIVE_VERSION_MAJOR 1000\n';
+  const stamped =
+    '#define REACT_NATIVE_VERSION_MAJOR 0\n#define REACT_NATIVE_VERSION_MINOR 87\n';
+  for (const [dir, name, text] of [
+    [rnRoot, versionSource, sentinel],
+    [overlay, versionSource, stamped],
+    [rnRoot, tracingSource, '// current move-only tracing definition\n'],
+    [overlay, tracingSource, '// stale copyable tracing definition\n'],
+  ]) {
+    fs.mkdirSync(path.dirname(path.join(dir, name)), {recursive: true});
+    fs.writeFileSync(path.join(dir, name), text);
+  }
+  const slices = ['ios-arm64', 'macos-arm64_x86_64'];
+  for (const slice of slices) {
+    fs.mkdirSync(path.join(xcfw, slice, 'React.framework'), {recursive: true});
+  }
+  const plan: HeadersSpecPlan = {
+    react: [
+      {
+        relPath: 'ReactNativeVersion.h',
+        source: versionSource,
+        naturalPath: 'React/ReactNativeVersion.h',
+      },
+      {
+        relPath: 'TraceRecordingState.h',
+        source: tracingSource,
+        naturalPath: 'jsinspector-modern/tracing/TraceRecordingState.h',
+      },
+    ],
+    reactNativeHeaders: [],
+    depsNamespaces: [],
+    umbrella: [],
+    namespaceModules: {},
+    namespaceUmbrellas: [],
+    privateReactHeaders: {modular: [], textual: []},
+    collisions: [],
+  };
+  try {
+    emitReactFrameworkHeaders(xcfw, plan, rnRoot, overlay);
+    for (const slice of slices) {
+      const headers = path.join(xcfw, slice, 'React.framework', 'Headers');
+      expect(
+        fs.readFileSync(path.join(headers, 'ReactNativeVersion.h'), 'utf8'),
+      ).toBe(stamped);
+      expect(
+        fs.readFileSync(path.join(headers, 'TraceRecordingState.h'), 'utf8'),
+      ).toBe('// current move-only tracing definition\n');
+    }
+    expect(fs.readFileSync(path.join(rnRoot, versionSource), 'utf8')).toBe(
+      sentinel,
+    );
+    emitReactFrameworkHeaders(xcfw, plan, rnRoot);
+    expect(
+      fs.readFileSync(
+        path.join(
+          xcfw,
+          slices[0],
+          'React.framework/Headers/ReactNativeVersion.h',
+        ),
+        'utf8',
+      ),
+    ).toBe(sentinel);
+  } finally {
+    fs.rmSync(root, {recursive: true, force: true});
+  }
+});
+
 describe('composeToolingHash', () => {
   test('returns a 64-char hex sha256 digest', () => {
     const hash = composeToolingHash();
@@ -55,9 +133,52 @@ describe('composeToolingHash', () => {
   });
 });
 
+test('header sidecar composition uses the binary macOS slice instead of iOS defaults', () => {
+  const emitter = require('../headers-xcframework');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'macos-headers-compose-'));
+  const slices = [
+    {name: 'macos', sdk: 'macosx', targets: ['arm64-apple-macosx11.0']},
+  ];
+  const recipe = jest
+    .spyOn(emitter, 'stubSlicesFromXcframework')
+    .mockReturnValue(slices);
+  const compose = jest
+    .spyOn(emitter, 'composeHeadersOnlyXcframework')
+    .mockReturnValue(path.join(root, 'ReactNativeHeaders.xcframework'));
+  // No compiler or xcodebuild is needed: this checks the platform handoff.
+  try {
+    buildReactNativeHeadersXcframework(
+      root,
+      {
+        react: [],
+        reactNativeHeaders: [],
+        depsNamespaces: [],
+        umbrella: [],
+        namespaceUmbrellas: [],
+        namespaceModules: {},
+        privateReactHeaders: {modular: [], textual: []},
+        collisions: [],
+      },
+      root,
+      emitter.stubSlicesFromXcframework('/binary/React.xcframework'),
+    );
+    expect(recipe).toHaveBeenCalledWith('/binary/React.xcframework');
+    expect(compose).toHaveBeenCalledWith(
+      root,
+      'ReactNativeHeaders',
+      expect.any(String),
+      slices,
+    );
+  } finally {
+    recipe.mockRestore();
+    compose.mockRestore();
+    fs.rmSync(root, {recursive: true, force: true});
+  }
+});
+
 describe('binary-derived header sidecars', () => {
   let tmp = '';
-  const plan = {
+  const plan: HeadersSpecPlan = {
     react: [],
     reactNativeHeaders: [],
     umbrella: [],
@@ -67,7 +188,7 @@ describe('binary-derived header sidecars', () => {
     collisions: [],
     privateReactHeaders: {modular: [], textual: []},
   };
-  const writeBinary = (name, platform) => {
+  const writeBinary = (name: string, platform: string) => {
     const dir = path.join(tmp, name + '.xcframework');
     fs.mkdirSync(dir, {recursive: true});
     fs.writeFileSync(

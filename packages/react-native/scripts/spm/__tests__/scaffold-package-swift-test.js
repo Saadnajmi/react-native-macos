@@ -718,9 +718,11 @@ describe('emitScaffoldedPackageSwift', () => {
     const out = emitScaffoldedPackageSwift(
       baseSpec({extraFrameworks: ['UIKit', 'CoreMotion']}),
     );
-    const uikitCount = (out.match(/\.linkedFramework\("UIKit"\)/g) || [])
-      .length;
+    const uikitCount = (out.match(/\.linkedFramework\("UIKit",/g) || []).length;
     expect(uikitCount).toBe(1);
+    expect(out).toContain(
+      '.linkedFramework("AppKit", .when(platforms: [.macOS]))',
+    );
     expect(out).toContain('.linkedFramework("CoreMotion")');
   });
 

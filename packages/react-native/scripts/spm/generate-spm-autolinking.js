@@ -998,7 +998,7 @@ function generateAutolinkedPackageSwift(
             dependencies: [${reactProductDeps()}],
             path: "${t.path}",${excludeLine}${publicHeadersLine}${resourcesLine}
             cxxSettings: [${REACT_CXX_CONFIG_DEFINES.join(', ')}],
-            linkerSettings: [.linkedFramework("UIKit"), .linkedFramework("Foundation"), .linkedFramework("CoreGraphics")]
+            linkerSettings: [.linkedFramework("UIKit", .when(platforms: [.iOS, .tvOS, .visionOS, .macCatalyst])), .linkedFramework("AppKit", .when(platforms: [.macOS])), .linkedFramework("Foundation"), .linkedFramework("CoreGraphics")]
         )`;
   });
 
@@ -1226,7 +1226,7 @@ ${packageDepsBlock}    targets: [
             name: "${swiftName}",
             dependencies: [${targetDeps.join(', ')}],
             path: "${targetPath}",${excludeLine}${sourcesLine}${publicHeadersLine}${resourcesLine}${cSettingsLine}${cxxSettingsLine}
-            linkerSettings: [.linkedFramework("UIKit"), .linkedFramework("Foundation"), .linkedFramework("CoreGraphics")]
+            linkerSettings: [.linkedFramework("UIKit", .when(platforms: [.iOS, .tvOS, .visionOS, .macCatalyst])), .linkedFramework("AppKit", .when(platforms: [.macOS])), .linkedFramework("Foundation"), .linkedFramework("CoreGraphics")]
         ),
     ],
     cxxLanguageStandard: .cxx20

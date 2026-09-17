@@ -277,17 +277,8 @@ function renderNamespaceUmbrella(
   const imports = headers
     .map(np => `#import "${np.slice(ns.length + 1)}"`)
     .join('\n');
-  return `#ifdef __OBJC__
-#import <TargetConditionals.h>
-#if TARGET_OS_OSX
-#import <AppKit/AppKit.h>
-#else
-#import <UIKit/UIKit.h>
-#endif
-#endif
-
-${imports}
-`;
+  // [macOS] Match the framework's platform without requiring UIKit on macOS.
+  return `#ifdef __OBJC__\n#import <TargetConditionals.h>\n#if TARGET_OS_OSX\n#import <AppKit/AppKit.h>\n#else\n#import <UIKit/UIKit.h>\n#endif\n#endif\n\n${imports}\n`;
 }
 
 /**

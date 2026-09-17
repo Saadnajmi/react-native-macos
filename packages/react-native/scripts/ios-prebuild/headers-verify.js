@@ -495,6 +495,7 @@ function parseArgs(argv /*: Array<string> */) /*: {
 function main(argv /*:: ?: Array<string> */) /*: void */ {
   const args = parseArgs(argv ?? process.argv.slice(2));
   const inventory = computeInventory(RN_ROOT);
+  // [macOS] Reject physical-source collisions before plan selection or baseline writes.
   if (inventory.collisions.length > 0) {
     const detail = inventory.collisions
       .map(c => `${c.naturalPath} <- ${c.sources.join(', ')}`)

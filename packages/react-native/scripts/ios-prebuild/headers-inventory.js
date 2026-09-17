@@ -35,62 +35,6 @@ const {DEPS_NAMESPACES} = require('./headers-spec');
 const fs = require('fs');
 const path = require('path');
 
-// The macOS fork keeps top-level HostPlatform* dispatch headers that select the
-// macOS or generic implementation. Podspec globs also discover the nested
-// implementations at the same natural include path, so choose the dispatch
-// header explicitly. Legacy interop is the inverse: upstream's platform/ios
-// header is the guarded canonical implementation and already carries the macOS
-// type adaptations.
-// Only these exact pairs are equivalent public spellings. An additional source
-// must remain a collision, even when the preferred source is present.
-const NATURAL_PATH_SOURCE_PREFERENCES /*: Map<string, {
-  preferredSource: string,
-  competingSource: string,
-}> */ = new Map([
-  [
-    'react/renderer/components/legacyviewmanagerinterop/RCTLegacyViewManagerInteropCoordinator.h',
-    {
-      preferredSource:
-        'ReactCommon/react/renderer/components/legacyviewmanagerinterop/platform/ios/react/renderer/components/legacyviewmanagerinterop/RCTLegacyViewManagerInteropCoordinator.h',
-      competingSource:
-        'ReactCommon/react/renderer/components/legacyviewmanagerinterop/RCTLegacyViewManagerInteropCoordinator.h',
-    },
-  ],
-  ...[
-    'HostPlatformTouch.h',
-    'HostPlatformViewEventEmitter.h',
-    'HostPlatformViewProps.h',
-    'HostPlatformViewTraitsInitializer.h',
-  ].map(name => [
-    `react/renderer/components/view/${name}`,
-    {
-      preferredSource: `ReactCommon/react/renderer/components/view/${name}`,
-      competingSource: `ReactCommon/react/renderer/components/view/platform/cxx/react/renderer/components/view/${name}`,
-    },
-  ]),
-]);
-
-const PLATFORM_DISPATCH_IMPLEMENTATIONS /*: Map<string, string> */ = new Map(
-  [
-    'HostPlatformTouch.h',
-    'HostPlatformViewEventEmitter.h',
-    'HostPlatformViewProps.h',
-    'HostPlatformViewTraitsInitializer.h',
-    'KeyEvent.h',
-    'MouseEvent.h',
-  ].map(name => [
-    `react/renderer/components/view/${name}`,
-    `ReactCommon/react/renderer/components/view/platform/macos/react/renderer/components/view/${name}`,
-  ]),
-);
-
-const PLATFORM_DISPATCH_AUXILIARY_HEADERS /*: Map<string, string> */ = new Map([
-  [
-    'ReactCommon/react/renderer/components/view/platform/macos/react/renderer/components/view/HostPlatformViewEvents.h',
-    'react/renderer/components/view/HostPlatformViewProps.h',
-  ],
-]);
-
 /*::
 type Identity = {
   pod: string, // pod folder name in Headers/ (specName with '-' -> '_')
@@ -103,6 +47,7 @@ type Identity = {
 type IncludeRef = {
   token: string, // text between <> or ""
   cxxGuarded: boolean, // true when only reachable under #ifdef __cplusplus
+  appleExcluded?: boolean, // proven unreachable in the Apple payload
 };
 
 type HeaderEntry = {
@@ -140,18 +85,20 @@ const THIRD_PARTY_LIBS /*: Set<string> */ = new Set(DEPS_NAMESPACES);
 const SDK_PREFIXES = new Set([
   'Accelerate',
   'Accessibility',
-  'AppKit',
+  'AppKit', // [macOS]
   'AVFoundation',
   'AVKit',
   'CFNetwork',
   'CommonCrypto',
   'CoreFoundation',
+  'CoreAudio', // [macOS]
   'CoreGraphics',
   'CoreLocation',
   'CoreMedia',
   'CoreServices',
   'CoreText',
   'CoreVideo',
+  'UniformTypeIdentifiers', // [macOS]
   'Foundation',
   'ImageIO',
   'JavaScriptCore',
@@ -182,12 +129,145 @@ const SDK_PREFIXES = new Set([
   'sys',
 ]);
 
+// Three-valued logic: unknown feature conditions must keep both branches.
+function conditionNot(value /*: ?boolean */) /*: ?boolean */ {
+  return value == null ? null : !value;
+}
+
+function conditionAnd(a /*: ?boolean */, b /*: ?boolean */) /*: ?boolean */ {
+  return a === false || b === false
+    ? false
+    : a === true && b === true
+      ? true
+      : null;
+}
+
 /**
- * Scans a header's text line by line, tracking the preprocessor-conditional
+ * Evaluate only Boolean platform guards, not arbitrary preprocessor syntax.
+ * Android macros are false for every Apple slice. Leave all other macros
+ * unknown, including TARGET_OS_OSX: both macOS and generic C++ paths ship.
+ * Unsupported expressions remain unknown rather than hiding dependencies.
+ */
+function appleCondition(expression /*: string */) /*: ?boolean */ {
+  const tokens =
+    expression.match(/defined\b|[A-Za-z_]\w*|&&|\|\||[!()]|\S/g) ?? [];
+  let index = 0;
+  let valid = true;
+  const macroValue = (name /*: ?string */) /*: ?boolean */ =>
+    name === '__ANDROID__' || name === 'ANDROID' ? false : null;
+  const unary = () /*: ?boolean */ => {
+    const token = tokens[index++];
+    if (token === '!') {
+      return conditionNot(unary());
+    }
+    if (token === '(') {
+      const value = or();
+      valid = tokens[index++] === ')' && valid;
+      return value;
+    }
+    if (token === 'defined') {
+      const parenthesized = tokens[index] === '(';
+      if (parenthesized) {
+        index++;
+      }
+      const name = tokens[index++];
+      valid = /^[A-Za-z_]\w*$/.test(name ?? '') && valid;
+      if (parenthesized) {
+        valid = tokens[index++] === ')' && valid;
+      }
+      return macroValue(name);
+    }
+    if (/^[A-Za-z_]\w*$/.test(token ?? '')) {
+      return macroValue(token);
+    }
+    valid = false;
+    return null;
+  };
+  const and = () /*: ?boolean */ => {
+    let value = unary();
+    while (tokens[index] === '&&') {
+      index++;
+      value = conditionAnd(value, unary());
+    }
+    return value;
+  };
+  const or = () /*: ?boolean */ => {
+    let value = and();
+    while (tokens[index] === '||') {
+      index++;
+      value = conditionNot(
+        conditionAnd(conditionNot(value), conditionNot(and())),
+      );
+    }
+    return value;
+  };
+  const value = or();
+  return valid && index === tokens.length ? value : null;
+}
+
+/**
+ * Normalize CRLF and standalone CR before splicing escaped newlines and
+ * recognizing comments. A block comment is one space, even across physical
+ * lines. Only a newline outside that comment ends the directive. Keep line
+ * comments and quoted tokens separate so their delimiters cannot change the
+ * comment state.
+ */
+function headerLogicalLines(text /*: string */) /*: Array<string> */ {
+  const source = text.replace(/\r\n?/g, '\n').replace(/\\\n/g, '');
+  const lines = [];
+  let line = '';
+  let inBlockComment = false;
+  let inLineComment = false;
+  let quote = '';
+  for (let i = 0; i < source.length; i++) {
+    const char = source[i];
+    const next = source[i + 1];
+    if (inBlockComment) {
+      if (char === '*' && next === '/') {
+        inBlockComment = false;
+        i++;
+      }
+    } else if (char === '\n') {
+      lines.push(line);
+      line = '';
+      inLineComment = false;
+      quote = '';
+    } else if (inLineComment) {
+      continue;
+    } else if (quote !== '') {
+      line += char;
+      if (char === quote) {
+        quote = '';
+      } else if (char === '\\' && next != null && quote !== '>') {
+        line += next;
+        i++;
+      }
+    } else if (char === '/' && next === '*') {
+      line += ' ';
+      inBlockComment = true;
+      i++;
+    } else if (char === '/' && next === '/') {
+      inLineComment = true;
+      i++;
+    } else {
+      if (char === '"' || char === "'") {
+        quote = char;
+      } else if (char === '<' && /^\s*#\s*(?:include|import)\s*$/.test(line)) {
+        quote = '>';
+      }
+      line += char;
+    }
+  }
+  lines.push(line);
+  return lines;
+}
+
+/**
+ * Scans a header's logical lines, tracking the preprocessor-conditional
  * stack just enough to know whether a line is only compiled under
  * `__cplusplus`. Returns the include list and language-marker observations.
- * Heuristic by design: nested #if logic beyond __cplusplus is treated as
- * "other" and ignored.
+ * Includes retain an exclusion flag when their branch cannot run on Apple.
+ * Unknown conditions remain conservatively eligible for include resolution.
  */
 function scanHeader(text /*: string */) /*: {
   includes: Array<IncludeRef>,
@@ -203,6 +283,8 @@ function scanHeader(text /*: string */) /*: {
   // Stack frames: 'cpp' (only under __cplusplus), 'notcpp', 'other'.
   const stack /*: Array<'cpp' | 'notcpp' | 'other'> */ = [];
   const inCxxOnly = () => stack.includes('cpp');
+  const platformStack /*: Array<{active: ?boolean, remaining: ?boolean}> */ =
+    [];
 
   const includeRe = /^\s*#\s*(?:include|import)\s+(?:<([^>]+)>|"([^"]+)")/;
   const objcRe =
@@ -210,33 +292,30 @@ function scanHeader(text /*: string */) /*: {
   const cxxRe =
     /^\s*(namespace\s+[A-Za-z_]|template\s*<|extern\s+"C\+\+"|enum\s+class\b|constexpr\b|using\s+(namespace\s|[A-Za-z_]\w*\s*=))/;
 
-  // Track /* ... */ block comments across lines so a documentation line inside
-  // a comment (e.g. `namespace`, `template <`, `constexpr`) can't trip the C++
-  // detector below and needlessly shrink the umbrella.
-  let inBlockComment = false;
-  for (const rawLine of text.split('\n')) {
-    let line = rawLine;
-    if (inBlockComment) {
-      const end = line.indexOf('*/');
-      if (end === -1) {
-        continue; // whole line still inside a block comment
-      }
-      line = line.slice(end + 2);
-      inBlockComment = false;
-    }
-    // Drop complete inline block comments, then line comments (which also
-    // swallow any `/*` living inside a `//` comment), then detect a block
-    // comment that opens and runs onto the next line.
-    line = line.replace(/\/\*.*?\*\//g, '');
-    line = line.replace(/\/\/.*$/, '');
-    const blockOpen = line.indexOf('/*');
-    if (blockOpen !== -1) {
-      inBlockComment = true;
-      line = line.slice(0, blockOpen);
-    }
+  for (const line of headerLogicalLines(text)) {
     const cond = line.match(/^\s*#\s*(if|ifdef|ifndef|elif|else|endif)\b(.*)$/);
     if (cond) {
       const [, directive, rest] = cond;
+      if (
+        directive === 'if' ||
+        directive === 'ifdef' ||
+        directive === 'ifndef'
+      ) {
+        const expression =
+          directive === 'if' ? rest : `defined(${rest.trim()})`;
+        const value = appleCondition(expression);
+        const active = directive === 'ifndef' ? conditionNot(value) : value;
+        platformStack.push({active, remaining: conditionNot(active)});
+      } else if (directive === 'endif') {
+        platformStack.pop();
+      } else {
+        const frame = platformStack[platformStack.length - 1];
+        if (frame != null) {
+          const value = directive === 'else' ? true : appleCondition(rest);
+          frame.active = conditionAnd(frame.remaining, value);
+          frame.remaining = conditionAnd(frame.remaining, conditionNot(value));
+        }
+      }
       const mentionsCpp = /__cplusplus/.test(rest);
       if (directive === 'ifdef' || directive === 'if') {
         stack.push(
@@ -266,6 +345,9 @@ function scanHeader(text /*: string */) /*: {
       includes.push({
         token: inc[1] != null ? inc[1] : `"${inc[2]}"`,
         cxxGuarded: inCxxOnly(),
+        ...(platformStack.some(frame => frame.active === false)
+          ? {appleExcluded: true}
+          : {}),
       });
     }
     if (objcRe.test(line)) {
@@ -426,31 +508,6 @@ function buildInventory(rootFolder /*: string */) /*: {
         };
         addIdentity(naturalPath, identity, header.source);
 
-        // Podspec header maps flatten platform implementations to their public
-        // include spelling. Dispatch headers include those implementations by
-        // their full ReactCommon path, so ship that physical spelling too.
-        const sourcePath = path.relative(rootFolder, header.source);
-        const reactCommonPrefix = 'ReactCommon/';
-        if (
-          sourcePath.startsWith(reactCommonPrefix) &&
-          sourcePath.includes('/platform/') &&
-          sourcePath.endsWith(path.basename(naturalPath))
-        ) {
-          const physicalNaturalPath = sourcePath.slice(
-            reactCommonPrefix.length,
-          );
-          if (physicalNaturalPath !== naturalPath) {
-            addIdentity(
-              physicalNaturalPath,
-              {
-                ...identity,
-                namespacedPath: path.join(podName, physicalNaturalPath),
-              },
-              header.source,
-            );
-          }
-        }
-
         // The merged ReactCoreHeaders tree ALSO exposes React_RCTAppDelegate
         // headers bare at the root (hosts write #import <RCTDefaultReactNativeFactoryDelegate.h>).
         // Model that second identity explicitly.
@@ -464,102 +521,6 @@ function buildInventory(rootFolder /*: string */) /*: {
             header.source,
           );
         }
-      }
-    }
-  }
-
-  for (const [
-    wrapperPath,
-    implementationSource,
-  ] of PLATFORM_DISPATCH_IMPLEMENTATIONS) {
-    const wrapper = entries.get(wrapperPath);
-    const wrapperIdentity = wrapper?.identities.find(
-      identity => identity.source === `ReactCommon/${wrapperPath}`,
-    );
-    const implementationPath = implementationSource.slice(
-      'ReactCommon/'.length,
-    );
-    const implementationAbsSource = path.join(rootFolder, implementationSource);
-    if (
-      wrapperIdentity == null ||
-      entries.has(implementationPath) ||
-      !fs.existsSync(implementationAbsSource)
-    ) {
-      continue;
-    }
-    addIdentity(
-      implementationPath,
-      {
-        ...wrapperIdentity,
-        namespacedPath: path.join(wrapperIdentity.pod, implementationPath),
-        source: implementationSource,
-      },
-      implementationAbsSource,
-    );
-  }
-
-  for (const [
-    implementationSource,
-    wrapperPath,
-  ] of PLATFORM_DISPATCH_AUXILIARY_HEADERS) {
-    const wrapper = entries.get(wrapperPath);
-    const wrapperIdentity = wrapper?.identities.find(
-      identity => identity.source === `ReactCommon/${wrapperPath}`,
-    );
-    const implementationPath = implementationSource.slice(
-      'ReactCommon/'.length,
-    );
-    const implementationAbsSource = path.join(rootFolder, implementationSource);
-    if (
-      wrapperIdentity == null ||
-      entries.has(implementationPath) ||
-      !fs.existsSync(implementationAbsSource)
-    ) {
-      continue;
-    }
-    addIdentity(
-      implementationPath,
-      {
-        ...wrapperIdentity,
-        namespacedPath: path.join(wrapperIdentity.pod, implementationPath),
-        source: implementationSource,
-      },
-      implementationAbsSource,
-    );
-  }
-
-  for (const [
-    naturalPath,
-    {preferredSource, competingSource},
-  ] of NATURAL_PATH_SOURCE_PREFERENCES) {
-    const sources = naturalToSources.get(naturalPath);
-    const preferredAbsSource = path.join(rootFolder, preferredSource);
-    if (
-      sources == null ||
-      sources.size !== 2 ||
-      !sources.has(preferredAbsSource) ||
-      !sources.has(path.join(rootFolder, competingSource))
-    ) {
-      continue;
-    }
-
-    naturalToSources.set(naturalPath, new Set([preferredAbsSource]));
-    const entry = entries.get(naturalPath);
-    if (entry != null) {
-      entry.identities = entry.identities.filter(
-        identity => identity.source === preferredSource,
-      );
-    }
-    for (const source of sources) {
-      if (source === preferredAbsSource) {
-        continue;
-      }
-      const naturals = sourceToNatural.get(source);
-      if (naturals != null) {
-        sourceToNatural.set(
-          source,
-          naturals.filter(candidate => candidate !== naturalPath),
-        );
       }
     }
   }
@@ -617,18 +578,23 @@ function classifyEntries(
 
     for (const inc of scan.includes) {
       let token = inc.token;
+      if (inc.appleExcluded) {
+        // Keep the edge visible without resolving a non-Apple dependency.
+        entry.includes.otherPlatform.push(token);
+        continue;
+      }
       // Quoted includes search the packaged sibling first, then the include
       // root. Normalize subdirectories and dot segments in both spellings.
       if (token.startsWith('"')) {
-        const quotedPath = token.slice(1, -1);
-        const packagedPaths = path.posix.isAbsolute(quotedPath)
+        const quotedToken = token.slice(1, -1);
+        const packagedPaths = path.posix.isAbsolute(quotedToken)
           ? []
           : [
               path.posix.join(
                 path.posix.dirname(entry.naturalPath),
-                quotedPath,
+                quotedToken,
               ),
-              path.posix.normalize(quotedPath),
+              path.posix.normalize(quotedToken),
             ];
         const packagedPath = packagedPaths.find(
           candidate => !candidate.startsWith('../') && entries.has(candidate),
@@ -640,10 +606,18 @@ function classifyEntries(
           });
           continue;
         }
-        // Preserve the source-to-natural mapping for relocated pod headers
-        // when neither packaged spelling is present.
-        const resolved = path.resolve(path.dirname(absSource), quotedPath);
-        const naturals = sourceToNatural.get(resolved);
+        const resolved = path.resolve(path.dirname(absSource), quotedToken);
+        // [macOS] Framework-qualified quoted imports resolve through the same
+        // public namespace as angle imports. Text's shared platform header is
+        // in its parent directory before CocoaPods flattens the header map.
+        const naturals =
+          sourceToNatural.get(resolved) ??
+          (entries.has(quotedToken) ? [quotedToken] : undefined) ??
+          (quotedToken === 'RCTTextUIKit.h'
+            ? sourceToNatural.get(
+                path.join(rootFolder, 'Libraries/Text/RCTTextUIKit.h'),
+              )
+            : undefined);
         if (naturals && naturals.length > 0) {
           entry.includes.internal.push({
             naturalPath: naturals[0],
@@ -819,7 +793,4 @@ module.exports = {
   scanHeader,
   THIRD_PARTY_LIBS,
   META_INTERNAL_RE,
-  NATURAL_PATH_SOURCE_PREFERENCES,
-  PLATFORM_DISPATCH_IMPLEMENTATIONS,
-  PLATFORM_DISPATCH_AUXILIARY_HEADERS,
 };

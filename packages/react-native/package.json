@@ -44,6 +44,7 @@
       "default": "./Libraries/*.js"
     },
     "./scripts/*": "./scripts/*.js",
+    "./scripts/codegen/generate-artifacts-executor": "./scripts/codegen/generate-artifacts-executor/index.js",
     "./scripts/*.sh": "./scripts/*.sh",
     "./scripts/*.rb": "./scripts/*.rb",
     "./asset-registry": {
@@ -174,6 +175,7 @@
     "metro": "^0.87.0",
     "metro-runtime": "^0.87.0",
     "metro-source-map": "^0.87.0",
+    "micromatch": "^4.0.4",
     "nullthrows": "^1.1.1",
     "plist": "^3.1.0",
     "pretty-format": "^29.7.0",

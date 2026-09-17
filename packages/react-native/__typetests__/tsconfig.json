@@ -11,12 +11,11 @@
     "noEmit": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "bundler",
-    "baseUrl": "..",
-    "ignoreDeprecations": "6.0",
+    // [macOS] Resolve upstream test imports to the fork's generated API.
     "paths": {
-      "react-native": ["types_generated/index.d.ts"],
-      "react-native/*": ["*"]
+      "react-native": ["../types_generated/index.d.ts"]
     }
   },
-  "include": ["**/*"]
+  "include": ["**/*"],
+  "exclude": ["macos-public-api.ts"]
 }

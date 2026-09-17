@@ -361,7 +361,12 @@ describe('generateSynthPackageSwift', () => {
 
   it('links UIKit and Foundation frameworks by default', () => {
     const result = generateSynthPackageSwift(baseSpec());
-    expect(result).toContain('.linkedFramework("UIKit")');
+    expect(result).toContain(
+      '.linkedFramework("UIKit", .when(platforms: [.iOS, .tvOS, .visionOS, .macCatalyst]))',
+    );
+    expect(result).toContain(
+      '.linkedFramework("AppKit", .when(platforms: [.macOS]))',
+    );
     expect(result).toContain('.linkedFramework("Foundation")');
   });
 
