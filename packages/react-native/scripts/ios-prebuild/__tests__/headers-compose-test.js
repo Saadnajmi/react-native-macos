@@ -66,9 +66,14 @@ test('header sidecar composition uses the binary macOS slice instead of iOS defa
     buildReactNativeHeadersXcframework(
       root,
       {
+        react: [],
         reactNativeHeaders: [],
+        depsNamespaces: [],
+        umbrella: [],
         namespaceUmbrellas: [],
         namespaceModules: {},
+        privateReactHeaders: {modular: [], textual: []},
+        collisions: [],
       },
       root,
       false,
