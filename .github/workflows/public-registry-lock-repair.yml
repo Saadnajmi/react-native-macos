@@ -1,0 +1,110 @@
+name: Public registry lock repair diagnostic
+
+on:
+  push:
+    branches: [ci/public-registry-lock-repair-20260922]
+
+permissions:
+  contents: read
+
+jobs:
+  repair:
+    if: github.repository == 'Saadnajmi/react-native-macos'
+    name: ${{ matrix.label }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - label: microsoft-0.83-merge
+            repo: microsoft/react-native-macos
+            sha: 38554845fad8ce7c1e09e32292134097d721e306
+          - label: fork-private-workspace-versions
+            repo: Saadnajmi/react-native-macos
+            sha: 226a7abc2fb5d630d2c5915d2e082acbbdc94e60
+          - label: fork-0.84-merge
+            repo: Saadnajmi/react-native-macos
+            sha: 94cd29f8dd31d0620c2b39e7decdd3b3b8a3239f
+          - label: fork-0.84-release
+            repo: Saadnajmi/react-native-macos
+            sha: 3b24e136f8173a3fc4d6a3be10137ee43bedbf7f
+          - label: fork-0.85-merge
+            repo: Saadnajmi/react-native-macos
+            sha: 87bdf1260570d26b9bcdf563758840e8f8a6651c
+          - label: microsoft-0.85-redbox2-merge
+            repo: microsoft/react-native-macos
+            sha: 6a5388f7f0e04e832b1402c6ba1912eeccef0592
+          - label: fork-0.85-release
+            repo: Saadnajmi/react-native-macos
+            sha: 407d52525fc505058fe17fccbe91bf0425b73a82
+          - label: fork-0.85-redbox2-appkit
+            repo: Saadnajmi/react-native-macos
+            sha: 6af0a328d890b664611ad6faa27c099bb9780a4b
+          - label: fork-0.86-merge
+            repo: Saadnajmi/react-native-macos
+            sha: bea77621cac7dd1508c49261f6aa89e7bc73b637
+          - label: fork-0.86-release
+            repo: Saadnajmi/react-native-macos
+            sha: 0d57e366f9e213f6198038b626c9e07f3c28b7d0
+          - label: fork-0.87-merge
+            repo: Saadnajmi/react-native-macos
+            sha: 41b8d04bad6570f1c03d53d8e4aa337e696311df
+          - label: fork-0.87-apple-foundation
+            repo: Saadnajmi/react-native-macos
+            sha: b338b06e3b449fc4d3564655d22e71858c24b8b8
+          - label: fork-release-stack-merge-skill
+            repo: Saadnajmi/react-native-macos
+            sha: df6389fe9d578db87d13c121dd271a42183e2a33
+          - label: fork-0.87-integration
+            repo: Saadnajmi/react-native-macos
+            sha: 300417255eea51d85ab7896d445a5c6e5a92f998
+          - label: fork-0.87-interop-header
+            repo: Saadnajmi/react-native-macos
+            sha: c6458c977a09afd97b8e5d29faa2d1f60acf828b
+          - label: fork-0.87-stable-sync
+            repo: Saadnajmi/react-native-macos
+            sha: 3b0469ef496da439914a58fcbb60eec068875f06
+          - label: fork-0.87-hermes-tests
+            repo: Saadnajmi/react-native-macos
+            sha: 1599a8975f1320bba05f66f230eed4279dce215e
+          - label: fork-0.87-release
+            repo: Saadnajmi/react-native-macos
+            sha: 1d192785caf0bff27245a1be2ffb8599df785982
+    env:
+      CI: '1'
+      YARN_NPM_REGISTRY_SERVER: https://registry.yarnpkg.com
+      YARN_ENABLE_HARDENED_MODE: '1'
+      YARN_ENABLE_IMMUTABLE_INSTALLS: '1'
+      YARN_ENABLE_SCRIPTS: '0'
+      SOURCE_SHA: ${{ matrix.sha }}
+      SOURCE_REPOSITORY: ${{ matrix.repo }}
+      SOURCE_LABEL: ${{ matrix.label }}
+    steps:
+      - name: Checkout diagnostic branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: diagnostic
+      - name: Checkout exact source head
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.repo }}
+          ref: ${{ matrix.sha }}
+          persist-credentials: false
+          path: source
+      - name: Use CI Node version
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate and strictly audit public registry lock
+        run: node diagnostic/scripts/public-registry-lock-repair.cjs source "artifacts/$SOURCE_SHA"
+      - name: Upload diagnostics, including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-registry-lock-${{ matrix.sha }}
+          path: artifacts/${{ matrix.sha }}/
+          if-no-files-found: warn
+          retention-days: 14
