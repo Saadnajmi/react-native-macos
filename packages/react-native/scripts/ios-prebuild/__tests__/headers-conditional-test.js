@@ -21,9 +21,9 @@ const {
   collectIncludeHealth,
   diffAgainstBaseline,
 } = require('../headers-verify');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 const root = '/header-inventory-fixture';
 
@@ -304,7 +304,7 @@ test.each([2, 3])('never suppresses %s conflicting physical sources', count => {
   expect(inventory.entries.size).toBe(1); // No donor-only physical aliases.
 });
 
-test('real inventory retains 1154 entries with generated FBReactNativeSpec headers and no include-health drift', () => {
+test('real inventory retains 1170 entries with generated FBReactNativeSpec headers and no include-health drift', () => {
   const rnRoot = path.resolve(__dirname, '../../..');
   const generatedRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), 'header-codegen-'),
@@ -353,9 +353,9 @@ test('real inventory retains 1154 entries with generated FBReactNativeSpec heade
         'utf8',
       ),
     );
-    expect(inventory.headers).toHaveLength(1154);
+    expect(inventory.headers).toHaveLength(1170);
     expect(inventory.collisions).toEqual([]);
-    expect(baseline).toHaveLength(21);
+    expect(baseline).toHaveLength(23);
     expect(
       diffAgainstBaseline(collectIncludeHealth(inventory), baseline),
     ).toEqual({newOffenders: [], resolved: []});

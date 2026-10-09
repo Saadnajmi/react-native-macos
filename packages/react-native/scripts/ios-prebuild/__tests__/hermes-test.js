@@ -10,19 +10,21 @@
 
 'use strict';
 
-jest.mock('child_process', () => ({execFileSync: jest.fn()}));
+jest.mock('node:child_process', () => ({execFileSync: jest.fn()}));
 jest.mock('../microsoft-hermes', () => ({
   hermesCommitAtMergeBase: jest.fn(),
 }));
 
-const {prepareHermesArtifactsAsync} = require('../hermes');
-const {hermesCommitAtMergeBase} = require('../microsoft-hermes');
-const {execFileSync} = require('child_process');
-const fs = require('fs');
+// hermes.js memoizes artifact HEAD checks per module instance, so each test
+// loads fresh copies of it and its mocks.
+let prepareHermesArtifactsAsync;
+let hermesCommitAtMergeBase;
+let execFileSync;
 const ini = require('ini');
-const os = require('os');
-const path = require('path');
-const {Readable} = require('stream');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const {Readable} = require('node:stream');
 
 const propertiesPath = path.resolve(
   __dirname,
@@ -37,6 +39,7 @@ const envKeys = [
   'HERMES_ENGINE_TARBALL_PATH',
   'HERMES_VERSION',
   'ENTERPRISE_REPOSITORY',
+  'RCT_REACT_NATIVE_MAVEN_MIRROR_ENABLED',
 ];
 let tmp;
 let artifacts;
@@ -49,6 +52,10 @@ let standaloneMacOS;
 let includeInfo;
 
 beforeEach(() => {
+  jest.resetModules();
+  ({prepareHermesArtifactsAsync} = require('../hermes'));
+  ({hermesCommitAtMergeBase} = require('../microsoft-hermes'));
+  ({execFileSync} = require('node:child_process'));
   jest.useRealTimers();
   jest.clearAllMocks();
   savedEnv = Object.fromEntries(envKeys.map(key => [key, process.env[key]]));
@@ -123,7 +130,7 @@ afterEach(() => {
 });
 
 function releaseUrl(version, flavor = 'debug') {
-  return `https://repo1.maven.org/maven2/com/facebook/hermes/hermes-ios/${version}/hermes-ios-${version}-hermes-ios-${flavor}.tar.gz`;
+  return `https://repo.reactnative.dev/maven2/com/facebook/hermes/hermes-ios/${version}/hermes-ios-${version}-hermes-ios-${flavor}.tar.gz`;
 }
 
 function populateExtractedFramework() {
@@ -335,6 +342,13 @@ test('uses the selected pin for snapshot metadata and download', async () => {
   await prepareHermesArtifactsAsync('1000.0.0', 'Debug');
   expect(global.fetch.mock.calls).toEqual([
     [releaseUrl('234.5.67'), {method: 'HEAD'}],
+    [
+      releaseUrl('234.5.67').replace(
+        'https://repo.reactnative.dev/maven2',
+        'https://repo1.maven.org/maven2',
+      ),
+      {method: 'HEAD'},
+    ],
     [`${base}/maven-metadata.xml`],
     [url, {method: 'HEAD'}],
     [`${base}/maven-metadata.xml`],
@@ -347,7 +361,7 @@ test('preserves the enterprise repository override', async () => {
   await prepareHermesArtifactsAsync('0.83.1', 'Release');
   expect(global.fetch).toHaveBeenCalledWith(
     releaseUrl('123.4.56', 'release').replace(
-      'https://repo1.maven.org/maven2',
+      'https://repo.reactnative.dev/maven2',
       process.env.ENTERPRISE_REPOSITORY,
     ),
   );

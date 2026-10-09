@@ -164,6 +164,30 @@ jobs:
           use-prebuilds: true
           flavor: ${{ matrix.flavor }}
 
+  test_maestro_cloud_ios:
+    needs: test_ios_rntester
+    # test_ios_rntester is continue-on-error. If its Release artifact is missing,
+    # the reusable workflow fails explicitly while downloading or validating it.
+    if: |
+      needs.test_ios_rntester.result == 'success' &&
+      (
+        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+        (
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          github.actor != 'dependabot[bot]'
+        )
+      )
+    uses: ./.github/workflows/maestro-cloud-rntester.yml
+    with:
+      platform: iOS
+      artifact-name: RNTesterApp-NewArch-Release
+      download-path: /tmp/RNTesterBuild/RNTester.app
+      app-file: /tmp/RNTesterBuild/RNTester.app
+      app-id: com.meta.RNTester.localDevelopment
+      exclude-tags: android-only
+    secrets: inherit
+
   test_e2e_ios_rntester:
     needs: test_ios_rntester
     if: ${{ needs.test_ios_rntester.result == 'success' }}
@@ -204,6 +228,40 @@ jobs:
       fail-on-error: true
     secrets: inherit
 
+  test_ios_spm_rntester:
+    needs:
+      [
+        prebuild_apple_dependencies,
+        prebuild_react_native_core,
+        check_code_changes,
+      ]
+    if: ${{ needs.prebuild_react_native_core.result == 'success' && needs.check_code_changes.outputs.should_test_ios == 'true' }}
+    uses: ./.github/workflows/test-ios-spm-rntester.yml
+    secrets: inherit
+
+  test_ios_spm_helloworld:
+    needs:
+      [
+        prebuild_apple_dependencies,
+        prebuild_react_native_core,
+        check_code_changes,
+      ]
+    if: ${{ needs.prebuild_react_native_core.result == 'success' && needs.check_code_changes.outputs.should_test_ios == 'true' }}
+    uses: ./.github/workflows/test-ios-spm-helloworld.yml
+    secrets: inherit
+
+  test_ios_spm_newapp:
+    needs:
+      [
+        build_npm_package,
+        prebuild_apple_dependencies,
+        prebuild_react_native_core,
+        check_code_changes,
+      ]
+    if: ${{ needs.prebuild_react_native_core.result == 'success' && needs.build_npm_package.result == 'success' && needs.check_code_changes.outputs.should_test_ios == 'true' }}
+    uses: ./.github/workflows/test-ios-spm-newapp.yml
+    secrets: inherit
+
   test_e2e_android_templateapp:
     needs: [build_npm_package, build_android]
     if: ${{ always() && needs.build_android.result == 'success' && needs.build_npm_package.result == 'success' }}
@@ -214,6 +272,8 @@ jobs:
     needs: test_e2e_android_templateapp
     if: ${{ always() && needs.test_e2e_android_templateapp.outputs.status == 'failure' }}
     uses: ./.github/workflows/e2e-android-templateapp.yml
+    with:
+      retry-attempt: 1
     secrets: inherit
 
   test_e2e_android_templateapp_retry_2:
@@ -222,6 +282,7 @@ jobs:
     uses: ./.github/workflows/e2e-android-templateapp.yml
     with:
       fail-on-error: true
+      retry-attempt: 2
     secrets: inherit
 
   build_fantom_runner:
@@ -293,6 +354,28 @@ jobs:
           release-type: ${{ needs.set_release_type.outputs.RELEASE_TYPE }}
           gradle-cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
 
+  test_maestro_cloud_android:
+    needs: build_android
+    if: |
+      needs.build_android.result == 'success' &&
+      (
+        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+        (
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          github.actor != 'dependabot[bot]'
+        )
+      )
+    uses: ./.github/workflows/maestro-cloud-rntester.yml
+    with:
+      platform: Android
+      artifact-name: rntester-release
+      download-path: /tmp/rntester-android
+      app-file: /tmp/rntester-android/app-arm64-v8a-release.apk
+      app-id: com.facebook.react.uiapp
+      exclude-tags: ios-only,local-screenshot-baseline
+    secrets: inherit
+
   test_e2e_android_rntester:
     needs: build_android
     if: ${{ needs.build_android.result == 'success' }}
@@ -303,6 +386,8 @@ jobs:
     needs: test_e2e_android_rntester
     if: ${{ always() && needs.test_e2e_android_rntester.outputs.status == 'failure' }}
     uses: ./.github/workflows/e2e-android-rntester.yml
+    with:
+      retry-attempt: 1
     secrets: inherit
 
   test_e2e_android_rntester_retry_2:
@@ -311,6 +396,7 @@ jobs:
     uses: ./.github/workflows/e2e-android-rntester.yml
     with:
       fail-on-error: true
+      retry-attempt: 2
     secrets: inherit
 
   build_npm_package:
@@ -326,7 +412,10 @@ jobs:
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled')
+      !contains(needs.*.result, 'cancelled') &&
+      (needs.build_android.result == 'success' ||
+        needs.prebuild_apple_dependencies.result == 'success' ||
+        needs.prebuild_react_native_core.result == 'success')
     container:
       image: reactnativecommunity/react-native-android:latest
       env:
@@ -460,9 +549,6 @@ jobs:
         uses: ./.github/actions/setup-node
       - name: Install dependencies
         uses: ./.github/actions/yarn-install
-      - name: Lint file structure
-        shell: bash
-        run: ./.github/workflow-scripts/lint_files.sh
       - name: Run shellcheck
         shell: bash
         run: ./.github/workflow-scripts/analyze_scripts.sh

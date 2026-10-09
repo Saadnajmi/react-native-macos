@@ -32,6 +32,7 @@
 #import "RCTReloadCommand.h"
 #import "RCTUtils.h"
 
+#if !defined(RCT_REMOVE_LEGACY_MODULE_INTEROP) || !defined(RCT_REMOVE_LEGACY_COMPONENT_INTEROP)
 // [macOS
 /**
  * List of core React Native modules.
@@ -151,6 +152,7 @@ NSSet<NSString *> *getCoreModuleClasses(void)
 
   return coreModuleClasses;
 }
+#endif // !defined(RCT_REMOVE_LEGACY_MODULE_INTEROP) || !defined(RCT_REMOVE_LEGACY_COMPONENT_INTEROP)
 
 static NSMutableArray<NSString *> *modulesLoadedWithOldArch;
 void addModuleLoadedWithOldArch(NSString * /*moduleName*/);
@@ -169,6 +171,7 @@ NSMutableArray<NSString *> *getModulesLoadedWithOldArch(void)
   return modulesLoadedWithOldArch;
 }
 
+#if !defined(RCT_REMOVE_LEGACY_MODULE_INTEROP) || !defined(RCT_REMOVE_LEGACY_COMPONENT_INTEROP)
 /**
  * Register the given class as a bridge module. All modules must be registered
  * prior to the first bridge initialization.
@@ -193,6 +196,7 @@ void RCTRegisterModule(Class moduleClass)
     [RCTModuleClasses addObject:moduleClass];
   });
 }
+#endif // !defined(RCT_REMOVE_LEGACY_MODULE_INTEROP) || !defined(RCT_REMOVE_LEGACY_COMPONENT_INTEROP)
 
 /**
  * This function returns the module name for a given class.

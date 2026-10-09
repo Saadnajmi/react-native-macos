@@ -130,17 +130,18 @@ class NewArchitectureTests < Test::Unit::TestCase
 
         # Assert
         assert_equal("-DRCT_NEW_ARCH_ENABLED=1", spec.compiler_flags)
+        # Xcode splits HEADER_SEARCH_PATHS on whitespace, so every entry is quoted.
         assert_equal(
             [
                 "\"$(PODS_ROOT)/Headers/Private/Yoga\"",
-                "$(PODS_ROOT)/glog",
-                "$(PODS_ROOT)/boost",
-                "$(PODS_ROOT)/DoubleConversion",
-                "$(PODS_ROOT)/fast_float/include",
-                "$(PODS_ROOT)/fmt/include",
-                "$(PODS_ROOT)/SocketRocket",
-                "$(PODS_ROOT)/RCT-Folly"
-            ],
+                "\"$(PODS_ROOT)/glog\"",
+                "\"$(PODS_ROOT)/boost\"",
+                "\"$(PODS_ROOT)/DoubleConversion\"",
+                "\"$(PODS_ROOT)/fast_float/include\"",
+                "\"$(PODS_ROOT)/fmt/include\"",
+                "\"$(PODS_ROOT)/SocketRocket\"",
+                "\"$(PODS_ROOT)/RCT-Folly\""
+            ].join(" "),
             spec.pod_target_xcconfig["HEADER_SEARCH_PATHS"]
         )
         assert_equal("c++20", spec.pod_target_xcconfig["CLANG_CXX_LANGUAGE_STANDARD"])
@@ -165,6 +166,7 @@ class NewArchitectureTests < Test::Unit::TestCase
                 { :dependency_name => "React-rendererdebug" },
                 { :dependency_name => "React-jsi" },
                 { :dependency_name => "React-renderercss" },
+                { :dependency_name => "React-cxxstableapi" },
                 { :dependency_name => "hermes-engine" },
                 { :dependency_name => "glog" },
                 { :dependency_name => "boost" },
@@ -194,7 +196,7 @@ class NewArchitectureTests < Test::Unit::TestCase
 
         # Assert
         assert_equal("#{NewArchitectureHelper.folly_compiler_flags}", Helpers::Constants.folly_config[:compiler_flags])
-        assert_equal([*other_flags_arr, '"$(PODS_ROOT)/Headers/Private/Yoga"', '$(PODS_ROOT)/glog', '$(PODS_ROOT)/boost', '$(PODS_ROOT)/DoubleConversion', '$(PODS_ROOT)/fast_float/include', '$(PODS_ROOT)/fmt/include', '$(PODS_ROOT)/SocketRocket', '$(PODS_ROOT)/RCT-Folly'], spec.pod_target_xcconfig["HEADER_SEARCH_PATHS"])
+        assert_equal([*other_flags_arr, '"$(PODS_ROOT)/Headers/Private/Yoga"', '"$(PODS_ROOT)/glog"', '"$(PODS_ROOT)/boost"', '"$(PODS_ROOT)/DoubleConversion"', '"$(PODS_ROOT)/fast_float/include"', '"$(PODS_ROOT)/fmt/include"', '"$(PODS_ROOT)/SocketRocket"', '"$(PODS_ROOT)/RCT-Folly"'].join(" "), spec.pod_target_xcconfig["HEADER_SEARCH_PATHS"])
         assert_equal("c++20", spec.pod_target_xcconfig["CLANG_CXX_LANGUAGE_STANDARD"])
         assert_equal(
             [
@@ -216,6 +218,7 @@ class NewArchitectureTests < Test::Unit::TestCase
                 { :dependency_name => "React-rendererdebug" },
                 { :dependency_name => "React-jsi" },
                 { :dependency_name => "React-renderercss" },
+                { :dependency_name => "React-cxxstableapi" },
                 { :dependency_name => "hermes-engine" },
                 { :dependency_name => "glog" },
                 { :dependency_name => "boost" },

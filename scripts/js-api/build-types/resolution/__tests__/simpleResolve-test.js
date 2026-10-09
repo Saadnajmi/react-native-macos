@@ -9,8 +9,8 @@
  */
 
 const {PACKAGES_DIR} = require('../../../../shared/consts');
-const {promises: fs} = require('fs');
-const path = require('path');
+const {promises: fs} = require('node:fs');
+const path = require('node:path');
 
 describe('simpleResolve workspace dependencies', () => {
   afterEach(() => {

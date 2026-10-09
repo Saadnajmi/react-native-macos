@@ -32,8 +32,8 @@
 const {getHeaderFilesFromPodspecs} = require('./headers');
 // headers-spec.js requires only fs/path, so this cannot cycle.
 const {DEPS_NAMESPACES} = require('./headers-spec');
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 /*::
 type Identity = {
@@ -144,8 +144,9 @@ function conditionAnd(a /*: ?boolean */, b /*: ?boolean */) /*: ?boolean */ {
 
 /**
  * Evaluate only Boolean platform guards, not arbitrary preprocessor syntax.
- * Android macros are false for every Apple slice. Leave all other macros
- * unknown, including TARGET_OS_OSX: both macOS and generic C++ paths ship.
+ * Android and Windows (USE_WINUI_FABRIC) macros are false for every Apple
+ * slice. Leave all other macros unknown, including TARGET_OS_OSX: both macOS
+ * and generic C++ paths ship.
  * Unsupported expressions remain unknown rather than hiding dependencies.
  */
 function appleCondition(expression /*: string */) /*: ?boolean */ {
@@ -154,7 +155,9 @@ function appleCondition(expression /*: string */) /*: ?boolean */ {
   let index = 0;
   let valid = true;
   const macroValue = (name /*: ?string */) /*: ?boolean */ =>
-    name === '__ANDROID__' || name === 'ANDROID' ? false : null;
+    name === '__ANDROID__' || name === 'ANDROID' || name === 'USE_WINUI_FABRIC'
+      ? false
+      : null;
   const unary = () /*: ?boolean */ => {
     const token = tokens[index++];
     if (token === '!') {

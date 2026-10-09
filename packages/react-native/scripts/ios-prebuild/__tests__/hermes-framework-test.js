@@ -10,13 +10,13 @@
 
 'use strict';
 
-jest.mock('child_process', () => ({execFileSync: jest.fn()}));
+jest.mock('node:child_process', () => ({execFileSync: jest.fn()}));
 
 const {recomposeHermesXCFramework} = require('../hermes-framework');
-const {execFileSync} = require('child_process');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+const {execFileSync} = require('node:child_process');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 const libraries = [
   {

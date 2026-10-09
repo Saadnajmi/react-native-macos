@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @generated SignedSource<<d4c2f8a5d0f9de7cacddcf172c7a7c13>>
+ * @generated SignedSource<<22559a8aa6038804a044dcd7a60f1856>>
  */
 
 /**
@@ -18,6 +18,8 @@
  */
 
 #pragma once
+
+#include <react/cxxstableapi/UmbrellaGuard.h>
 
 #include <react/featureflags/ReactNativeFeatureFlagsProvider.h>
 
@@ -75,16 +77,16 @@ class ReactNativeFeatureFlagsDefaults : public ReactNativeFeatureFlagsProvider {
     return false;
   }
 
-  bool enableAndroidFontWeightAdjustment() override {
-    return true;
-  }
-
   bool enableAndroidTextMeasurementOptimizations() override {
     return false;
   }
 
   bool enableBridgelessArchitecture() override {
-    return false;
+    return true;
+  }
+
+  bool enableBufferedCallInvoker() override {
+    return true;
   }
 
   bool enableCppPropsIteratorSetter() override {
@@ -143,7 +145,15 @@ class ReactNativeFeatureFlagsDefaults : public ReactNativeFeatureFlagsProvider {
     return false;
   }
 
+  bool enableImageTransparentTintColor() override {
+    return false;
+  }
+
   bool enableImmediateUpdateModeForContentOffsetChanges() override {
+    return false;
+  }
+
+  bool enableImperativeEvents() override {
     return false;
   }
 
@@ -175,16 +185,16 @@ class ReactNativeFeatureFlagsDefaults : public ReactNativeFeatureFlagsProvider {
     return false;
   }
 
+  bool enableMountingCoordinatorPullModelAndroid() override {
+    return false;
+  }
+
   bool enableMutationObserverByDefault() override {
     return false;
   }
 
   bool enableNativeCSSParsing() override {
     return false;
-  }
-
-  bool enableNetworkEventReporting() override {
-    return true;
   }
 
   bool enablePreparedTextLayout() override {
@@ -195,11 +205,7 @@ class ReactNativeFeatureFlagsDefaults : public ReactNativeFeatureFlagsProvider {
     return false;
   }
 
-  bool enableRuntimeSchedulerQueueClearingOnError() override {
-    return false;
-  }
-
-  bool enableSchedulerDelegateInvalidation() override {
+  bool enableResizeObserverByDefault() override {
     return false;
   }
 
@@ -259,11 +265,11 @@ class ReactNativeFeatureFlagsDefaults : public ReactNativeFeatureFlagsProvider {
     return false;
   }
 
-  bool fuseboxNetworkInspectionEnabled() override {
+  bool fuseboxScreenshotCaptureEnabled() override {
     return true;
   }
 
-  bool fuseboxScreenshotCaptureEnabled() override {
+  bool fuseboxWebSocketEventsEnabled() override {
     return false;
   }
 

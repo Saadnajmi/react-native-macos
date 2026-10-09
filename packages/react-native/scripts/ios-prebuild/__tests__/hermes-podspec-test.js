@@ -11,10 +11,10 @@
 'use strict';
 
 const {readHermesMetadata} = require('../hermes-version');
-const {spawnSync} = require('child_process');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+const {spawnSync} = require('node:child_process');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 const rnRoot = path.resolve(__dirname, '../../..');
 const podspec = path.join(rnRoot, 'sdks/hermes-engine/hermes-engine.podspec');

@@ -10,7 +10,7 @@
 
 'use strict';
 
-jest.mock('child_process', () => ({execFileSync: jest.fn()}));
+jest.mock('node:child_process', () => ({execFileSync: jest.fn()}));
 jest.mock('../microsoft-hermes', () => ({
   hermesCommitAtMergeBase: jest.fn(),
   findMatchingHermesVersion: jest.fn(() => {
@@ -18,16 +18,16 @@ jest.mock('../microsoft-hermes', () => ({
   }),
 }));
 
-const {prepareHermesArtifactsAsync} = require('../hermes');
-const {
-  findMatchingHermesVersion,
-  hermesCommitAtMergeBase,
-} = require('../microsoft-hermes');
-const {execFileSync} = require('child_process');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
-const {Readable} = require('stream');
+// hermes.js memoizes artifact HEAD checks per module instance, so each test
+// loads fresh copies of it and its mocks.
+let prepareHermesArtifactsAsync;
+let findMatchingHermesVersion;
+let hermesCommitAtMergeBase;
+let execFileSync;
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const {Readable} = require('node:stream');
 
 const propertiesPath = path.resolve(
   __dirname,
@@ -40,6 +40,7 @@ const envKeys = [
   'HERMES_ENGINE_TARBALL_PATH',
   'HERMES_VERSION',
   'ENTERPRISE_REPOSITORY',
+  'RCT_REACT_NATIVE_MAVEN_MIRROR_ENABLED',
 ];
 const commit = '0123456789abcdef0123456789abcdef01234567';
 let savedEnv;
@@ -49,6 +50,13 @@ let versionFile;
 let properties;
 
 beforeEach(() => {
+  jest.resetModules();
+  ({prepareHermesArtifactsAsync} = require('../hermes'));
+  ({
+    findMatchingHermesVersion,
+    hermesCommitAtMergeBase,
+  } = require('../microsoft-hermes'));
+  ({execFileSync} = require('node:child_process'));
   jest.useRealTimers();
   jest.clearAllMocks();
   savedEnv = Object.fromEntries(envKeys.map(key => [key, process.env[key]]));
@@ -119,7 +127,7 @@ afterEach(() => {
 });
 
 function releaseUrl(version) {
-  return `https://repo1.maven.org/maven2/com/facebook/hermes/hermes-ios/${version}/hermes-ios-${version}-hermes-ios-debug.tar.gz`;
+  return `https://repo.reactnative.dev/maven2/com/facebook/hermes/hermes-ios/${version}/hermes-ios-${version}-hermes-ios-debug.tar.gz`;
 }
 
 test.each(['0.84.0', '0.87.0', '1000.0.0'])(

@@ -1,9 +1,9 @@
 // @ts-check
 
 // @noflow
-const fs = require('fs');
+const fs = require('node:fs');
+const path = require('node:path');
 const { styleText } = require('node:util');
-const path = require('path');
 
 // Copied from `copyAndReplace` in react-native-community/cli as it's deleted in newer versions
 

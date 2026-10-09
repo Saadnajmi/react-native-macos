@@ -17,7 +17,7 @@ The motivation, staged migration plan, and open questions live in
 [RFC0994](https://github.com/react-native-community/discussions-and-proposals/blob/main/proposals/0994-swift-package-manager-support-for-react-native-ios-projects.md).
 The documents here describe how the implementation actually works.
 
-### macOS fork integration
+## macOS fork integration
 
 The fork preserves the `RCTUIKit` module and its React compatibility imports.
 Prebuilt core mode uses a dependency-only `React-RCTUIKit` facade: the header

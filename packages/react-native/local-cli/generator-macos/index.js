@@ -7,8 +7,8 @@ const {
   copyAndReplaceAll,
   createDir,
 } = require('../generator-common');
+const path = require('node:path');
 const { styleText } = require('node:util');
-const path = require('path');
 
 const macOSDir = 'macos';
 const oldProjectName = 'HelloWorld';

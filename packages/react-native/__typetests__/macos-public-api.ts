@@ -17,16 +17,16 @@ import type {
   DragEvent,
   PasteEvent,
 } from 'react-native-macos';
-import type {SystemEffectMacOS as ManualSystemEffectMacOS} from '../Libraries/StyleSheet/PlatformColorValueTypesMacOS';
+import type {SystemEffectMacOS as ManualSystemEffectMacOS} from '../types_DEPRECATED/Libraries/StyleSheet/PlatformColorValueTypesMacOS';
 import type {
   TextInputMacOSProps as ManualTextInputMacOSProps,
   PasteEvent as ManualPasteEvent,
-} from '../Libraries/Components/TextInput/TextInput';
-import type {ViewPropsMacOS as ManualViewPropsMacOS} from '../Libraries/Components/View/ViewPropTypes';
+} from '../types_DEPRECATED/Libraries/Components/TextInput/TextInput';
+import type {ViewPropsMacOS as ManualViewPropsMacOS} from '../types_DEPRECATED/Libraries/Components/View/ViewPropTypes';
 import type {
   NativeKeyEvent as ManualNativeKeyEvent,
   DragEvent as ManualDragEvent,
-} from '../Libraries/Types/CoreEventTypes';
+} from '../types_DEPRECATED/Libraries/Types/CoreEventTypes';
 
 type Assert<T extends true> = T;
 type IsAny<T> = 0 extends 1 & T ? true : false;

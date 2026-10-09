@@ -23,10 +23,10 @@ const {
 const inventory = require('../headers-inventory');
 const spec = require('../headers-spec');
 const xcframework = require('../headers-xcframework');
-const childProcess = require('child_process');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+const childProcess = require('node:child_process');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 describe('COMPOSE_TOOLING_FILES stays in sync with headers-compose.js requires', () => {
   test('every local sibling require is covered by the hashed file list', () => {

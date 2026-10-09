@@ -65,7 +65,7 @@ import {
   View,
   findNodeHandle,
 } from 'react-native';
-import * as ReactNativeFeatureFlags from 'react-native/src/private/featureflags/ReactNativeFeatureFlags';
+import {ReactNativeFeatureFlags} from 'react-native/react-private-interface';
 
 export type {ListRenderItemInfo, ListRenderItem, Separators};
 
@@ -808,7 +808,7 @@ class VirtualizedList extends StateSafePureComponent<
       firstVisibleItemKey: newFirstVisibleItemKey,
       pendingScrollUpdateCount:
         maintainVisibleContentPositionAdjustment != null
-          ? prevState.pendingScrollUpdateCount + 1
+          ? 1
           : prevState.pendingScrollUpdateCount,
     };
   }
@@ -948,7 +948,7 @@ class VirtualizedList extends StateSafePureComponent<
   }
 
   _renderEmptyComponent(
-    element: ExactReactElement_DEPRECATED<any>,
+    element: React.MixedElement,
     inversionStyle: StyleProp<ViewStyle>,
   ): React.Node {
     // $FlowFixMe[prop-missing] React.Element internal inspection
@@ -1025,7 +1025,7 @@ class VirtualizedList extends StateSafePureComponent<
     // 2a. Add a cell for ListEmptyComponent if applicable
     const itemCount = this.props.getItemCount(data);
     if (itemCount === 0 && ListEmptyComponent) {
-      const element: ExactReactElement_DEPRECATED<any> = (
+      const element: React.MixedElement = (
         isValidElement(ListEmptyComponent) ? (
           ListEmptyComponent
         ) : (
@@ -1197,7 +1197,7 @@ class VirtualizedList extends StateSafePureComponent<
           )(
             // $FlowExpectedError[incompatible-type] scrollProps is a superset of ScrollViewProps
             scrollProps,
-          ) as ExactReactElement_DEPRECATED<any>,
+          ) as React.JSX.Element,
           {
             ref: this._captureScrollRef,
           },
@@ -1293,6 +1293,7 @@ class VirtualizedList extends StateSafePureComponent<
   _pendingViewabilityUpdate: boolean = false;
   _prevParentOffset: number = 0;
   _scrollMetrics: {
+    crossAxisLength: number,
     dOffset: number,
     dt: number,
     offset: number,
@@ -1301,6 +1302,7 @@ class VirtualizedList extends StateSafePureComponent<
     visibleLength: number,
     zoomScale: number,
   } = {
+    crossAxisLength: 0,
     dOffset: 0,
     dt: 10,
     offset: 0,
@@ -1460,6 +1462,7 @@ class VirtualizedList extends StateSafePureComponent<
         this.context.getOutermostParentListRef().getScrollRef(),
         (x, y, width, height) => {
           this._offsetFromParentVirtualizedList = this._selectOffset({x, y});
+          const crossAxisLength = this._selectCrossAxisLength({width, height});
           this._listMetrics.notifyListContentLayout({
             layout: {width, height},
             orientation: this._orientation(),
@@ -1469,10 +1472,12 @@ class VirtualizedList extends StateSafePureComponent<
           );
 
           const metricsChanged =
+            this._scrollMetrics.crossAxisLength !== crossAxisLength ||
             this._scrollMetrics.visibleLength !== scrollMetrics.visibleLength ||
             this._scrollMetrics.offset !== scrollMetrics.offset;
 
           if (metricsChanged) {
+            this._scrollMetrics.crossAxisLength = crossAxisLength;
             this._scrollMetrics.visibleLength = scrollMetrics.visibleLength;
             this._scrollMetrics.offset = scrollMetrics.offset;
 
@@ -1499,6 +1504,9 @@ class VirtualizedList extends StateSafePureComponent<
   }
 
   _onLayout = (e: LayoutChangeEvent) => {
+    this._scrollMetrics.crossAxisLength = this._selectCrossAxisLength(
+      e.nativeEvent.layout,
+    );
     if (this._isNestedWithSameOrientation()) {
       // Need to adjust our scroll metrics to be relative to our containing
       // VirtualizedList before we can make claims about list item viewability
@@ -1679,6 +1687,18 @@ class VirtualizedList extends StateSafePureComponent<
     return !horizontalOrDefault(this.props.horizontal)
       ? metrics.height
       : metrics.width;
+  }
+
+  _selectCrossAxisLength(
+    metrics: Readonly<{
+      height: number,
+      width: number,
+      ...
+    }>,
+  ): number {
+    return !horizontalOrDefault(this.props.horizontal)
+      ? metrics.width
+      : metrics.height;
   }
 
   _selectOffset({x, y}: Readonly<{x: number, y: number, ...}>): number {
@@ -1864,6 +1884,9 @@ class VirtualizedList extends StateSafePureComponent<
       this.props.onScroll(e);
     }
     const timestamp = e.timeStamp;
+    let crossAxisLength = this._selectCrossAxisLength(
+      e.nativeEvent.layoutMeasurement,
+    );
     let visibleLength = this._selectLength(e.nativeEvent.layoutMeasurement);
     let contentLength = this._selectLength(e.nativeEvent.contentSize);
     let offset = this._offsetFromScrollEvent(e);
@@ -1880,6 +1903,7 @@ class VirtualizedList extends StateSafePureComponent<
           visibleLength,
           offset,
         }));
+      crossAxisLength = this._scrollMetrics.crossAxisLength;
     }
 
     const dt = this._scrollMetrics.timestamp
@@ -1905,6 +1929,7 @@ class VirtualizedList extends StateSafePureComponent<
     // For invalid negative values (w/ RTL), set this to 1.
     const zoomScale = e.nativeEvent.zoomScale < 0 ? 1 : e.nativeEvent.zoomScale;
     this._scrollMetrics = {
+      crossAxisLength,
       dt,
       dOffset,
       offset,
@@ -1914,9 +1939,7 @@ class VirtualizedList extends StateSafePureComponent<
       zoomScale,
     };
     if (this.state.pendingScrollUpdateCount > 0) {
-      this.setState<'pendingScrollUpdateCount'>(state => ({
-        pendingScrollUpdateCount: state.pendingScrollUpdateCount - 1,
-      }));
+      this.setState<'pendingScrollUpdateCount'>({pendingScrollUpdateCount: 0});
     }
     this._updateViewableItems(this.props, this.state.cellsAroundViewport);
     if (!this.props) {
@@ -2127,9 +2150,9 @@ class VirtualizedList extends StateSafePureComponent<
     // Keep a viewport's worth of content around the last focused cell to allow
     // random navigation around it without any blanking. E.g. tabbing from one
     // focused item out of viewport to another.
-    if (
-      !(this._lastFocusedCellKey && this._cellRefs[this._lastFocusedCellKey])
-    ) {
+    if (!(
+      this._lastFocusedCellKey && this._cellRefs[this._lastFocusedCellKey]
+    )) {
       return [];
     }
 
@@ -2188,11 +2211,15 @@ class VirtualizedList extends StateSafePureComponent<
     if (this.state.pendingScrollUpdateCount > 0) {
       return;
     }
+    const visibleLength =
+      this._scrollMetrics.crossAxisLength > 0
+        ? this._scrollMetrics.visibleLength
+        : 0;
     this._viewabilityTuples.forEach(tuple => {
       tuple.viewabilityHelper.onUpdate(
         props,
         this._scrollMetrics.offset,
-        this._scrollMetrics.visibleLength,
+        visibleLength,
         this._listMetrics,
         this._createViewToken,
         tuple.onViewableItemsChanged,

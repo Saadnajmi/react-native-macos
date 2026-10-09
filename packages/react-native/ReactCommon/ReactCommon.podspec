@@ -59,4 +59,6 @@ Pod::Spec.new do |s|
       add_dependency(sss, "React-utils", :version => version)
     end
   end
+
+  mark_as_react_native_build(s)
 end

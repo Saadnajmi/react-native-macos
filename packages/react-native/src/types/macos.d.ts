@@ -17,19 +17,15 @@ import type {
   KeyUpEvent,
   MouseEvent,
   NativeSyntheticEvent,
-} from '../../Libraries/Types/CoreEventTypes';
+} from '../../types_DEPRECATED/Libraries/Types/CoreEventTypes';
 
 export type {
   DragEvent,
   NativeKeyEvent,
-} from '../../Libraries/Types/CoreEventTypes';
+} from '../../types_DEPRECATED/Libraries/Types/CoreEventTypes';
 
 export type SystemEffectMacOS =
-  | 'none'
-  | 'pressed'
-  | 'deepPressed'
-  | 'disabled'
-  | 'rollover';
+  'none' | 'pressed' | 'deepPressed' | 'disabled' | 'rollover';
 
 export type PasteEvent = NativeSyntheticEvent<{
   dataTransfer: {

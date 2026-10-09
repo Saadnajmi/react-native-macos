@@ -16,7 +16,8 @@ class HermesEngineTests < Test::Unit::TestCase
   FLAGS = [nil, '1', '0', '', 'true']
   ENV_KEYS = %w[RCT_HERMES_V1_ENABLED RCT_BUILD_HERMES_FROM_SOURCE
     REACT_NATIVE_OVERRIDE_HERMES_DIR HERMES_ENGINE_TARBALL_PATH HERMES_COMMIT
-    HERMES_OVERRIDE_HERMESC_PATH ENTERPRISE_REPOSITORY]
+    HERMES_OVERRIDE_HERMESC_PATH ENTERPRISE_REPOSITORY
+    RCT_REACT_NATIVE_MAVEN_MIRROR_ENABLED]
 
   class Spec < OpenStruct
     def initialize
@@ -84,6 +85,7 @@ class HermesEngineTests < Test::Unit::TestCase
     end
     executable.define_singleton_method(:which!) { |_| '/usr/bin/cmake' }
     pod.const_set(:Executable, executable)
+    pod.const_set(:VERSION, '1.15.2')
     @sandbox.const_set(:Pod, pod)
   end
 
@@ -122,8 +124,14 @@ class HermesEngineTests < Test::Unit::TestCase
             assert_equal(2, spec.script_phases.length)
             assert_not_include(spec.subspecs, 'inspector')
           else
-            assert_equal({http: @sandbox.release_tarball_url(spec.version, :debug)}, spec.source)
-            assert_equal([[:artifact, spec.source[:http]]], @calls.select { |call| call.first == :artifact })
+            assert_equal({http: @sandbox.release_tarball_urls(spec.version, :debug).first}, spec.source)
+            # hermes_artifact_exists memoizes per URL (the stub does not), and the
+            # debug and release downloads each resolve their URL. Only the
+            # selected pin is ever probed.
+            assert_equal(
+              [[:artifact, spec.source[:http]], [:artifact, @sandbox.release_tarball_urls(spec.version, :release).first]],
+              @calls.select { |call| call.first == :artifact }.uniq,
+            )
             assert_equal([], @calls.select { |call| call.first == :merge_base })
             assert_equal('$(PODS_ROOT)/../compiler/hermesc/osx-bin/hermesc', spec.user_target_xcconfig['HERMES_CLI_PATH'])
             assert_equal('destroot/Library/Frameworks/macosx/hermesvm.framework', spec.subspecs['Pre-built'].osx.vendored_frameworks)
@@ -234,7 +242,7 @@ class HermesEngineTests < Test::Unit::TestCase
       version = METADATA.fetch('HERMES_VERSION_NAME')
       type = @sandbox.hermes_source_type(version, RN)
       assert_equal(@sandbox::HermesEngineSourceType::DOWNLOAD_PREBUILD_RELEASE_TARBALL, type)
-      assert_equal([[:artifact, @sandbox.release_tarball_url(version, :debug)]], @calls)
+      assert_equal([[:artifact, @sandbox.release_tarball_urls(version, :debug).first]], @calls)
       assert_equal('false', ENV['RCT_BUILD_HERMES_FROM_SOURCE'])
     end
   end
