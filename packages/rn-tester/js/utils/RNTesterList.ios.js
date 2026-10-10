@@ -122,7 +122,7 @@ const Components: Array<RNTesterModuleInfo> = [
   },
   {
     key: 'TextInputExample',
-    module: require('../examples/TextInput/TextInputExample'),
+    module: require('../examples/TextInput/TextInputExample.ios'), // [macOS] explicit .ios so RNTesterList.macos.js can share this list
     category: 'Basic',
   },
   {
@@ -336,7 +336,7 @@ const APIs: Array<RNTesterModuleInfo> = (
     },
     {
       key: 'TestLibraryExample',
-      module: require('../examples/TestLibrary/TestLibraryExample'),
+      module: require('../examples/TestLibrary/TestLibraryExample.ios'), // [macOS] explicit .ios so RNTesterList.macos.js can share this list
     },
     {
       key: 'TimerExample',
