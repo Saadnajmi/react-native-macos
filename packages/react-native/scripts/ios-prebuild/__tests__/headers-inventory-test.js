@@ -11,7 +11,7 @@
 'use strict';
 
 const {computeInventory, scanHeader} = require('../headers-inventory');
-const path = require('path');
+const path = require('node:path');
 
 test('fork inventory retains stable dispatcher paths and macOS headers without collisions', () => {
   const inventory = computeInventory(path.resolve(__dirname, '../../..'));
@@ -78,6 +78,55 @@ describe('scanHeader include classification', () => {
     expect(scanHeader(src).includes).toEqual([
       {token: 'a.h', cxxGuarded: false},
       {token: 'b.h', cxxGuarded: true},
+    ]);
+  });
+
+  // [macOS] The fork ships macOS slices, so TARGET_OS_OSX branches stay
+  // eligible. Includes in Android/Windows branches are kept but flagged as
+  // appleExcluded instead of being dropped.
+  test('includes for non-Apple platforms are flagged, macOS kept', () => {
+    const src = [
+      '#ifdef ANDROID',
+      '#include <android/only.h>',
+      '#endif',
+      '#if defined(TARGET_OS_OSX) && TARGET_OS_OSX',
+      '#include <macos/only.h>',
+      '#endif',
+      '#if defined(USE_WINUI_FABRIC)',
+      '#include <windows/only.h>',
+      '#endif',
+      '#include <ios/available.h>',
+      '',
+    ].join('\n');
+    expect(scanHeader(src).includes).toEqual([
+      {token: 'android/only.h', cxxGuarded: false, appleExcluded: true},
+      {token: 'macos/only.h', cxxGuarded: false},
+      {token: 'windows/only.h', cxxGuarded: false, appleExcluded: true},
+      {token: 'ios/available.h', cxxGuarded: false},
+    ]);
+  });
+  // macOS]
+
+  test('#else after a non-iOS platform guard is scanned', () => {
+    const src = [
+      '#ifdef ANDROID',
+      '#include <android/only.h>',
+      '#else',
+      '#include <ios/available.h>',
+      '#endif',
+      '',
+    ].join('\n');
+    expect(scanHeader(src).includes).toEqual([
+      {token: 'android/only.h', cxxGuarded: false, appleExcluded: true}, // [macOS]
+      {token: 'ios/available.h', cxxGuarded: false},
+    ]);
+  });
+
+  test('unknown platform conditions remain conservatively scanned', () => {
+    const src =
+      '#ifdef UNKNOWN_PLATFORM\n#include <maybe/available.h>\n#endif\n';
+    expect(scanHeader(src).includes).toEqual([
+      {token: 'maybe/available.h', cxxGuarded: false},
     ]);
   });
 });

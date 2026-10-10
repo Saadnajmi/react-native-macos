@@ -15,9 +15,9 @@ const {
 } = require('../codegen/generate-artifacts-executor/generateFBReactNativeSpecIOS');
 const {stubSlicesFromXcframework} = require('./headers-xcframework');
 const utils = require('./utils');
-const childProcess = require('child_process');
-const fs = require('fs');
-const path = require('path');
+const childProcess = require('node:child_process');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const {execFileSync} = childProcess; // [macOS]
 const {createLogger, findFirst} = utils;

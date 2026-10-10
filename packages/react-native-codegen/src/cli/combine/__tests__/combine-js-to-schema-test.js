@@ -11,9 +11,9 @@
 'use strict';
 
 const {expandDirectoriesIntoFiles} = require('../combine-js-to-schema.js');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 describe('expandDirectoriesIntoFiles', () => {
   it('does not traverse dependency symlinks or generated native specs', () => {

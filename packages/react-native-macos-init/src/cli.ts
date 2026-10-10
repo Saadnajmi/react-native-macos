@@ -5,10 +5,10 @@
  * @format
  */
 
-import {execSync} from 'child_process';
+import {execSync} from 'node:child_process';
 import * as findUp from 'find-up';
 import {styleText} from 'node:util';
-import * as fs from 'fs';
+import * as fs from 'node:fs';
 import * as npmFetch from 'npm-registry-fetch';
 import prompts from 'prompts';
 import * as semver from 'semver';

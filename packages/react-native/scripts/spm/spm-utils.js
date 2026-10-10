@@ -10,9 +10,9 @@
 
 'use strict';
 
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 // The package and product names React Native's own generated manifests use. A
 // dependency whose Swift name lands on one of them surfaces as a duplicate-name
@@ -169,6 +169,29 @@ function toSwiftName(name /*: string */) /*: string */ {
     .filter(Boolean)
     .map(s => s.charAt(0).toUpperCase() + s.slice(1))
     .join('');
+}
+
+// The charset a declared SwiftPM name must satisfy — permissive on purpose,
+// since it has to admit header-dir style (lowercase with hyphens) as well as
+// Swift identifiers.
+function isValidSwiftName(name /*: unknown */) /*: boolean */ {
+  return typeof name === 'string' && /^[A-Za-z_][A-Za-z0-9_-]*$/.test(name);
+}
+
+/**
+ * SwiftPM's `c99name` — the identifier a target's module is compiled under,
+ * with every character C99 rejects replaced by `_`. `react-native-svg` and
+ * `react_native_svg` share one, so they cannot both be targets.
+ */
+function toC99Name(name /*: string */) /*: string */ {
+  const mangled = name.replace(/[^A-Za-z0-9_]/g, '_');
+  return /^[0-9]/.test(mangled) ? `_${mangled}` : mangled;
+}
+
+// Collision key for a Swift target name: two names that share one collide, as a
+// module (punctuation) or as a headers directory (case).
+function swiftNameKey(name /*: string */) /*: string */ {
+  return toC99Name(name).toLowerCase();
 }
 
 /**
@@ -674,7 +697,7 @@ function runCodegenAndInstallTemplate(
     return;
   }
   logger.log('Running codegen...');
-  const {execSync} = require('child_process');
+  const {execSync} = require('node:child_process');
   const codegenArgs =
     `node "${codegenScript}" -p "${projectRoot}" -t ios` +
     (projectRoot !== appRoot ? ` -o "${appRoot}"` : '');
@@ -692,7 +715,7 @@ function runCodegenAndInstallTemplate(
 // Autolinking-plugin script phases — the shared validation rules. Two gates
 // apply them with different POLICIES (invokePlugins throws, the injector's
 // sidecar reader skips the entry), so only the rules live here. See
-// __docs__/spm-autolinking-plugins.md for the reasoning.
+// __doc__/spm-autolinking-plugins.md for the reasoning.
 // ---------------------------------------------------------------------------
 
 // `@` and `/` are admitted so a package can use its own scoped npm name
@@ -746,6 +769,9 @@ module.exports = {
   sharedCacheDir,
   defaultCacheDir,
   toSwiftName,
+  toC99Name,
+  swiftNameKey,
+  isValidSwiftName,
   deriveAppName,
   readPackageJson,
   findProjectRoot,

@@ -51,7 +51,10 @@ module.exports = {
   },
   // [macOS
   moduleNameMapper: {
-    // `resolver.js` strips `exports`; match this before the broad fork mapper.
+    // `resolver.js` strips `exports`, so alias these subpaths to their `src/` impl;
+    // match them before the broad fork mapper.
+    '^react-native/react-private-interface$':
+      '<rootDir>/packages/react-native/src/react-private-interface.js',
     '^react-native/setup-env$':
       '<rootDir>/packages/react-native/src/setup-env.js',
     // These mappers allow out-of-tree platforms tests to resolve RN imports

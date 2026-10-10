@@ -10,8 +10,8 @@
 
 const {REACT_NATIVE_PACKAGE_DIR} = require('../../../shared/consts');
 const translateSourceFile = require('../translateSourceFile');
-const {promises: fs} = require('fs');
-const path = require('path');
+const {promises: fs} = require('node:fs');
+const path = require('node:path');
 
 test('direct translation preserves the macOS shim used by full and watch builds', async () => {
   const file = path.join(REACT_NATIVE_PACKAGE_DIR, 'src/types/macos.js');

@@ -60,6 +60,7 @@ Pod::Spec.new do |s|
   s.dependency "React-logger"
   s.dependency "React-Core"
   s.dependency "React-debug"
+  s.dependency "React-cxxstableapi"
   s.dependency "React-featureflags"
   s.dependency "React-utils"
   s.dependency "React-runtimescheduler"
@@ -100,29 +101,6 @@ Pod::Spec.new do |s|
       sss.exclude_files        = "react/renderer/components/safeareaview/tests"
       sss.header_dir           = "react/renderer/components/safeareaview"
     end
-
-    # [macOS The "scrollview" subspec below duplicates source_files already declared in
-    # React-Fabric.podspec's "scrollview" subspec (which uses a recursive
-    # `react/renderer/components/scrollview/**/*` glob). The overlap causes
-    # ScrollViewShadowNode.cpp and friends to be compiled into both the
-    # React-Fabric and React-FabricComponents Pods targets, breaking consumers
-    # that link both libraries via `-all_load` (duplicate symbols). Comment it
-    # out here so scrollview is only built into React-Fabric -- where
-    # React-Fabric's mounting/internal/CullingContext.cpp already needs
-    # ScrollViewShadowNode anyway. Keep the 0.85 platform/ios paths documented
-    # in case this duplicate-source workaround is removed later.
-    #
-    # ss.subspec "scrollview" do |sss|
-    #   sss.source_files         = podspec_sources(["react/renderer/components/scrollview/*.{m,mm,cpp,h}",
-    #                               "react/renderer/components/scrollview/platform/cxx/**/*.{m,mm,cpp,h}",
-    #                               "react/renderer/components/scrollview/platform/ios/**/*.{m,mm,cpp,h}"],
-    #                               ["react/renderer/components/scrollview/*.h",
-    #                               "react/renderer/components/scrollview/platform/cxx/**/*.h",
-    #                               "react/renderer/components/scrollview/platform/ios/**/*.h"])
-    #   sss.exclude_files        = "react/renderer/components/scrollview/tests"
-    #   sss.header_dir           = "react/renderer/components/scrollview"
-    # end
-    # macOS]
 
     ss.subspec "text" do |sss|
       sss.source_files         = podspec_sources(["react/renderer/components/text/*.{m,mm,cpp,h}",
@@ -183,4 +161,6 @@ Pod::Spec.new do |s|
                               "react/renderer/textlayoutmanager/platform/cxx"
     ss.header_dir           = "react/renderer/textlayoutmanager"
   end
+
+  mark_as_react_native_build(s)
 end

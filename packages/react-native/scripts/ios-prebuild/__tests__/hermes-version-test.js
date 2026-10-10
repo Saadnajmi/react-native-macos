@@ -11,9 +11,9 @@
 'use strict';
 
 const {parseHermesMetadata, readHermesMetadata} = require('../hermes-version');
-const fs = require('fs');
 const ini = require('ini');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const properties =
   'HERMES_VERSION_NAME=123.4.56\nHERMES_V1_VERSION_NAME=234.5.67\n';

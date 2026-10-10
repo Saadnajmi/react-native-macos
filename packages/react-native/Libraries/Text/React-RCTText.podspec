@@ -40,4 +40,6 @@ Pod::Spec.new do |s|
   s.dependency "Yoga"
   s.dependency "React-Core/RCTTextHeaders", version
   add_dependency(s, "React-RCTUIKit", :framework_name => 'RCTUIKit', :version => version) # [macOS]
+
+  mark_as_react_native_build(s)
 end

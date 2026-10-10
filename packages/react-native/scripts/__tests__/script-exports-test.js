@@ -8,8 +8,8 @@
  * @noflow
  */
 
-const {execFileSync} = require('child_process');
-const path = require('path');
+const {execFileSync} = require('node:child_process');
+const path = require('node:path');
 
 test('Node resolves extensionless script exports, including the fork codegen directory', () => {
   // Test native Node package conditions rather than the Jest resolver's map.

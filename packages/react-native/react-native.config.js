@@ -14,14 +14,16 @@
 import type {Command} from '@react-native-community/cli-types';
  */
 
-// React Native shouldn't be exporting itself like this, the Community Template should be be directly
-// depending on and injecting:
+// IMPORTANT: This is a routing file only. Do NOT add new command
+// definitions or implementations here.
+//
+// New CLI commands belong in @react-native/community-cli-plugin, and
+// may (temporarily) be imported and registered here.
+//
+// Future state: The Community Template should directly depend on and inject:
 // - @react-native-community/cli-platform-android
 // - @react-native-community/cli-platform-ios
 // - @react-native/community-cli-plugin
-// - codegen command should be inhoused into @react-native-community/cli
-//
-// This is a temporary workaround.
 
 const verbose = Boolean(process.env.DEBUG?.includes('react-native'));
 
@@ -100,6 +102,10 @@ try {
     );
   }
 }
+// [macOS] `codegen` and `spm` stay defined below rather than imported from
+// @react-native/community-cli-plugin: the plugin versions resolve
+// `react-native/scripts/*`, which in a react-native-macos app points at
+// upstream react-native instead of this package's (macOS-aware) scripts.
 const {
   bundleCommand,
   startCommand,

@@ -1,6 +1,6 @@
 {
   "name": "@react-native/tester",
-  "version": "0.87.1",
+  "version": "0.88.0-rc.4",
   "private": true,
   "description": "React Native tester app.",
   "license": "MIT",
@@ -35,7 +35,7 @@
     "react-native-test-library-common": "workspace:*"
   },
   "peerDependencies": {
-    "react": "19.2.3",
+    "react": "19.3.0",
     "react-native-macos": "workspace:*"
   },
   "codegenConfig": {
@@ -62,5 +62,32 @@
     "listr2": "^6.4.1",
     "react-native-macos": "workspace:*",
     "rxjs": "npm:@react-native-community/rxjs@6.5.4-custom"
+  },
+  "swiftpmConfig": {
+    "modules": [
+      {
+        "name": "ReactCommonSamples",
+        "path": "../react-native/ReactCommon/react/nativemodule/samples/platform/ios"
+      },
+      {
+        "name": "ReactRCTPushNotification",
+        "path": "../react-native/Libraries/PushNotificationIOS",
+        "exclude": [
+          "React-RCTPushNotification.podspec"
+        ]
+      },
+      {
+        "name": "ScreenshotManager",
+        "path": "NativeModuleExample"
+      },
+      {
+        "name": "MyNativeView",
+        "path": "NativeComponentExample/ios"
+      },
+      {
+        "name": "NativeCxxModuleExample",
+        "path": "NativeCxxModuleExample"
+      }
+    ]
   }
 }

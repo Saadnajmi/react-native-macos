@@ -10,7 +10,7 @@
 
 'use strict';
 
-const path = require('path');
+const path = require('node:path');
 
 module.exports = {
   haste: {
@@ -18,10 +18,14 @@ module.exports = {
     platforms: ['android', 'ios', 'macos', 'native'], // [macOS]
   },
   moduleNameMapper: {
-    // `setup-env` is a secondary entry point exposed via the package's
-    // `exports`, but `./jest/resolver.js` strips `exports` and the generic
-    // mapper below resolves subpaths as literal directory paths. Alias it
-    // explicitly so it resolves to its `src/` implementation.
+    // `setup-env` and `react-private-interface` are secondary entry points
+    // exposed via the package's `exports`, but `./jest/resolver.js` strips
+    // `exports` and the generic mapper below resolves subpaths as literal
+    // directory paths. Alias them explicitly so they resolve to their `src/`
+    // implementations.
+    '^react-native/react-private-interface$': `${path.dirname(
+      require.resolve('react-native-macos'), // [macOS]
+    )}/src/react-private-interface.js`,
     '^react-native/setup-env$': `${path.dirname(
       require.resolve('react-native-macos'), // [macOS]
     )}/src/setup-env.js`,
@@ -32,9 +36,8 @@ module.exports = {
   resolver: require.resolve('./jest/resolver.js'),
   transform: {
     '^.+\\.(js|ts|tsx)$': 'babel-jest',
-    '^.+\\.(bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$': require.resolve(
-      './jest/assetFileTransformer.js',
-    ),
+    '^.+\\.(bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$':
+      require.resolve('./jest/assetFileTransformer.js'),
   },
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?)/)',

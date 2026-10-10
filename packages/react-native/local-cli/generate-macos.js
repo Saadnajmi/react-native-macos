@@ -5,8 +5,8 @@ const {
   copyProjectTemplateAndReplace,
   printFinishMessage,
 } = require('./generator-macos');
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 /**
  * Simple utility for running the macOS generator.

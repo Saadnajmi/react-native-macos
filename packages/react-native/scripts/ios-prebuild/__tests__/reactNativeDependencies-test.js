@@ -10,22 +10,27 @@
 
 'use strict';
 
-jest.mock('child_process', () => ({execFileSync: jest.fn()}));
+jest.mock('node:child_process', () => ({execFileSync: jest.fn()}));
 
 const {
   prepareReactNativeDependenciesArtifactsAsync,
 } = require('../reactNativeDependencies');
-const {execFileSync} = require('child_process');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
-const {Readable} = require('stream');
+const {execFileSync} = require('node:child_process');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const {Readable} = require('node:stream');
 
-const realExecFileSync = jest.requireActual('child_process').execFileSync;
+const realExecFileSync = jest.requireActual('node:child_process').execFileSync;
 const mkdirSync = fs.mkdirSync.bind(fs);
 const join = path.join.bind(path);
 const originalFetch = global.fetch;
-const envKeys = ['RN_DEP_VERSION', 'HERMES_ENGINE_TARBALL_PATH'];
+const envKeys = [
+  'RN_DEP_VERSION',
+  'HERMES_ENGINE_TARBALL_PATH',
+  'ENTERPRISE_REPOSITORY',
+  'RCT_REACT_NATIVE_MAVEN_MIRROR_ENABLED',
+];
 const binaryName = 'ReactNativeDependencies.xcframework';
 const sidecarName = 'ReactNativeDependenciesHeaders.xcframework';
 const headerPath = 'ios-arm64/Headers/folly/detail/Sidecar Header.h';

@@ -8,7 +8,7 @@
 const inventory = require('../headers-inventory');
 const spec = require('../headers-spec');
 const {main} = require('../headers-verify');
-const fs = require('fs');
+const fs = require('node:fs');
 
 afterEach(() => jest.restoreAllMocks());
 

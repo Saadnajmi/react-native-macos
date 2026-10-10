@@ -9,15 +9,15 @@
  */
 
 import type {PluginObj} from '@babel/core';
-import type {ParseResult} from 'hermes-transform/dist/transform/parse';
-import type {TransformASTResult} from 'hermes-transform/dist/transform/transformAST';
+import type {ParseResult} from 'flow-transform/dist/transform/parse';
+import type {TransformASTResult} from 'flow-transform/dist/transform/transformAST';
 
 const {REACT_NATIVE_PACKAGE_DIR} = require('../../shared/consts');
 const getDependencies = require('./resolution/getDependencies');
 const applyBabelTransformsSeq = require('./utils/applyBabelTransformsSeq');
 const translate = require('flow-api-translator');
-const {parse, print} = require('hermes-transform');
-const path = require('path');
+const {parse, print} = require('flow-transform');
+const path = require('node:path');
 
 type PreTransformFn = ParseResult => Promise<TransformASTResult>;
 
